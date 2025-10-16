@@ -42,10 +42,31 @@
             .no-print {
                 display: none !important;
             }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background: white !important;
+            }
+            .receipt-print {
+                border: 2px solid #000 !important;
+                margin: 0 !important;
+                padding: 20px !important;
+                box-shadow: none !important;
+            }
         }
         
         .receipt-border {
             border: 2px solid #000;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -57,7 +78,12 @@
                 <div class="flex justify-between items-center flex-col md:flex-row gap-4">
                     <div class="text-center md:text-right">
                         <h1 class="text-2xl font-bold text-gray-800">برنامج B Sakan لإدارة مصروفات العمارات</h1>
-                        <p class="text-gray-600" id="current-building">عمارة السالم 12</p>
+                        <div class="flex items-center justify-center md:justify-start space-x-2 space-x-reverse mt-1">
+                            <select id="building-select" class="bg-blue-50 border border-blue-200 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">اختر العمارة...</option>
+                            </select>
+                            <p class="text-gray-600 text-sm" id="current-building">عمارة السالم 12</p>
+                        </div>
                     </div>
                     <div class="flex space-x-3 space-x-reverse flex-wrap justify-center gap-2">
                         <button id="add-building-btn" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
@@ -77,43 +103,8 @@
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-6">
             <!-- Statistics Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div class="bg-blue-50 rounded-lg p-4 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-gray-600 text-sm">الرصيد الفعلي</p>
-                            <p class="text-blue-600 text-2xl font-bold">181 د.ل</p>
-                        </div>
-                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">+5%</span>
-                    </div>
-                </div>
-                <div class="bg-green-50 rounded-lg p-4 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-gray-600 text-sm">الدفعات</p>
-                            <p class="text-green-600 text-2xl font-bold">0 د.ل</p>
-                        </div>
-                        <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded-full">0%</span>
-                    </div>
-                </div>
-                <div class="bg-red-50 rounded-lg p-4 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-gray-600 text-sm">المسحوبات</p>
-                            <p class="text-red-600 text-2xl font-bold">5 د.ل</p>
-                        </div>
-                        <span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">-2%</span>
-                    </div>
-                </div>
-                <div class="bg-purple-50 rounded-lg p-4 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-gray-600 text-sm">عدد التوصيل</p>
-                            <p class="text-purple-600 text-2xl font-bold">10</p>
-                        </div>
-                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">+15%</span>
-                    </div>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="stats-container">
+                <!-- Stats will be loaded dynamically -->
             </div>
             
             <!-- Filter Section -->
@@ -124,7 +115,7 @@
                     </button>
                     <div class="flex space-x-2 space-x-reverse w-full md:w-auto justify-center">
                         <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors">
-                            حسابات ال (5)
+                            حسابات ال (<span id="owners-count">0</span>)
                         </button>
                         <button class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
                             جميع العمليات
@@ -134,122 +125,8 @@
             </div>
             
             <!-- Delivery/Payment List -->
-            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                <!-- Transaction 1 -->
-                <div class="bg-blue-50 p-4 border-b border-gray-200">
-                    <div class="flex justify-between items-center flex-col md:flex-row gap-4">
-                        <div class="flex items-center space-x-4 space-x-reverse">
-                            <input type="checkbox" class="h-4 w-4 text-blue-600 rounded">
-                            <div class="flex flex-col">
-                                <span class="font-semibold text-gray-800">محمد أحمد</span>
-                                <span class="text-sm text-gray-600">2025-10-16 - 10:30 ص</span>
-                                <span class="text-xs text-gray-500">ACC-001</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center space-x-4 space-x-reverse flex-wrap justify-center gap-2">
-                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium">
-                                عمليات سابقة
-                            </span>
-                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg font-semibold">
-                                19 د.ل
-                            </span>
-                            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm share-btn" data-id="1">
-                                <i class="fab fa-whatsapp mr-1"></i> مشاركة عبر واتساب
-                            </button>
-                            <button class="text-gray-500 hover:text-gray-700">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Transaction 2 -->
-                <div class="bg-green-50 p-4 border-b border-gray-200">
-                    <div class="flex justify-between items-center flex-col md:flex-row gap-4">
-                        <div class="flex items-center space-x-4 space-x-reverse">
-                            <input type="checkbox" class="h-4 w-4 text-blue-600 rounded">
-                            <div class="flex flex-col">
-                                <span class="font-semibold text-gray-800">فاطمة محمد</span>
-                                <span class="text-sm text-gray-600">2025-10-15 - 02:15 م</span>
-                                <span class="text-xs text-gray-500">ACC-002</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center space-x-4 space-x-reverse flex-wrap justify-center gap-2">
-                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium">
-                                عمليات سابقة
-                            </span>
-                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg font-semibold">
-                                12 د.ل
-                            </span>
-                            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm share-btn" data-id="2">
-                                <i class="fab fa-whatsapp mr-1"></i> مشاركة عبر واتساب
-                            </button>
-                            <button class="text-gray-500 hover:text-gray-700">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Transaction 3 -->
-                <div class="bg-pink-50 p-4 border-b border-gray-200">
-                    <div class="flex justify-between items-center flex-col md:flex-row gap-4">
-                        <div class="flex items-center space-x-4 space-x-reverse">
-                            <input type="checkbox" class="h-4 w-4 text-blue-600 rounded">
-                            <div class="flex flex-col">
-                                <span class="font-semibold text-gray-800">أحمد علي</span>
-                                <span class="text-sm text-gray-600">2025-10-14 - 09:45 ص</span>
-                                <span class="text-xs text-gray-500">ACC-003</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center space-x-4 space-x-reverse flex-wrap justify-center gap-2">
-                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium">
-                                عمليات سابقة
-                            </span>
-                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg font-semibold">
-                                15 د.ل
-                            </span>
-                            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm share-btn" data-id="3">
-                                <i class="fab fa-whatsapp mr-1"></i> مشاركة عبر واتساب
-                            </button>
-                            <button class="text-gray-500 hover:text-gray-700">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Transaction 4 -->
-                <div class="bg-yellow-50 p-4">
-                    <div class="flex justify-between items-center flex-col md:flex-row gap-4">
-                        <div class="flex items-center space-x-4 space-x-reverse">
-                            <input type="checkbox" class="h-4 w-4 text-blue-600 rounded">
-                            <div class="flex flex-col">
-                                <span class="font-semibold text-gray-800">سارة خالد</span>
-                                <span class="text-sm text-gray-600">2025-10-13 - 04:20 م</span>
-                                <span class="text-xs text-gray-500">ACC-004</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center space-x-4 space-x-reverse flex-wrap justify-center gap-2">
-                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium">
-                                عمليات سابقة
-                            </span>
-                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg font-semibold">
-                                22 د.ل
-                            </span>
-                            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm share-btn" data-id="4">
-                                <i class="fab fa-whatsapp mr-1"></i> مشاركة عبر واتساب
-                            </button>
-                            <button class="text-gray-500 hover:text-gray-700">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden" id="transactions-container">
+                <!-- Transactions will be loaded dynamically -->
             </div>
         </main>
 
@@ -295,7 +172,7 @@
 
     <!-- Add Building Modal -->
     <div id="add-building-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-lg w-full max-w-md">
+        <div class="bg-white rounded-lg w-full max-w-md fade-in">
             <div class="p-6">
                 <h2 class="text-xl font-bold text-gray-800 mb-2">إضافة عمارة جديدة</h2>
                 <p class="text-gray-600 mb-6">أدخل تفاصيل العمارة الجديدة</p>
@@ -372,7 +249,7 @@
 
     <!-- Add Owner Modal -->
     <div id="add-owner-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-lg w-full max-w-md">
+        <div class="bg-white rounded-lg w-full max-w-md fade-in">
             <div class="p-6">
                 <h2 class="text-xl font-bold text-gray-800 mb-2">إضافة مالك جديد</h2>
                 <p class="text-gray-600 mb-6">أدخل تفاصيل مالك الشقة الجديد</p>
@@ -411,8 +288,8 @@
                             <input
                                 type="text"
                                 name="apartmentNumber"
-                                value="1"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="1"
                             />
                         </div>
                         
@@ -492,7 +369,7 @@
 
     <!-- Add Payment Modal -->
     <div id="add-payment-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto fade-in">
             <div class="p-6">
                 <h2 class="text-xl font-bold text-gray-800 mb-2">إضافة دفعة جديدة</h2>
                 <p class="text-gray-600 mb-6">أدخل تفاصيل الدفعة الجديدة سواء كانت واردات أو مصروفات</p>
@@ -544,11 +421,9 @@
                             name="owner"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
+                            id="payment-owner-select"
                         >
                             <option value="">اختر مالك الشقة</option>
-                            <option value="owner1">محمد أحمد - شقة 1</option>
-                            <option value="owner2">فاطمة محمد - شقة 2</option>
-                            <option value="owner3">أحمد علي - شقة 3</option>
                         </select>
                     </div>
                     
@@ -559,8 +434,8 @@
                         <input
                             type="date"
                             name="date"
-                            value="2025-10-16"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            id="payment-date"
                         />
                     </div>
                     
@@ -568,7 +443,6 @@
                         <input
                             type="checkbox"
                             name="advancePayment"
-                            checked
                             class="h-4 w-4 text-blue-600 rounded"
                             id="advance-payment-checkbox"
                         />
@@ -577,45 +451,10 @@
                         </label>
                     </div>
                     
-                    <div id="months-selection" class="bg-gray-50 p-4 rounded-lg">
+                    <div id="months-selection" class="bg-gray-50 p-4 rounded-lg hidden">
                         <p class="text-sm font-medium text-gray-700 mb-2">اختر الشهور المدفوعة</p>
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                            <button type="button" class="month-btn bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium" data-month="يناير">
-                                يناير ×
-                            </button>
-                            <button type="button" class="month-btn bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium" data-month="فبراير">
-                                فبراير ×
-                            </button>
-                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="مارس">
-                                مارس
-                            </button>
-                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="أبريل">
-                                أبريل
-                            </button>
-                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="مايو">
-                                مايو
-                            </button>
-                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="يونيو">
-                                يونيو
-                            </button>
-                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="يوليو">
-                                يوليو
-                            </button>
-                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="أغسطس">
-                                أغسطس
-                            </button>
-                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="سبتمبر">
-                                سبتمبر
-                            </button>
-                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="أكتوبر">
-                                أكتوبر
-                            </button>
-                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="نوفمبر">
-                                نوفمبر
-                            </button>
-                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="ديسمبر">
-                                ديسمبر
-                            </button>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2" id="months-grid">
+                            <!-- Months will be populated by JavaScript -->
                         </div>
                     </div>
                     
@@ -653,7 +492,7 @@
 
     <!-- Receipt Modal -->
     <div id="receipt-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-lg w-full max-w-md receipt-border">
+        <div class="bg-white rounded-lg w-full max-w-md receipt-border receipt-print">
             <div class="p-6">
                 <!-- Header -->
                 <div class="text-center mb-6">
@@ -687,6 +526,14 @@
                             <span class="font-medium">وصف الدفعة:</span>
                             <span id="receipt-description">تأمين للعمارة</span>
                         </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">اسم المستفيد:</span>
+                            <span id="receipt-resident">محمد أحمد</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">رقم الشقة:</span>
+                            <span id="receipt-unit">1</span>
+                        </div>
                     </div>
                 </div>
                 
@@ -708,7 +555,7 @@
                     </div>
                 </div>
                 
-                <div class="mt-6 text-center flex space-x-3 space-x-reverse justify-center">
+                <div class="mt-6 text-center flex space-x-3 space-x-reverse justify-center no-print">
                     <button id="print-receipt-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                         <i class="fas fa-print mr-1"></i> طباعة
                     </button>
@@ -725,6 +572,89 @@
 
     <!-- JavaScript -->
     <script>
+        // Data Management
+        class DataManager {
+            constructor() {
+                this.buildings = this.loadFromStorage('buildings') || [
+                    { id: 1, name: 'عمارة السالم 12', address: 'شارع السالم', units: 12, notes: '' }
+                ];
+                this.owners = this.loadFromStorage('owners') || [];
+                this.transactions = this.loadFromStorage('transactions') || [];
+                this.currentBuildingId = this.loadFromStorage('currentBuildingId') || 1;
+            }
+
+            saveToStorage(key, data) {
+                localStorage.setItem(`bsakan_${key}`, JSON.stringify(data));
+            }
+
+            loadFromStorage(key) {
+                const data = localStorage.getItem(`bsakan_${key}`);
+                return data ? JSON.parse(data) : null;
+            }
+
+            // Buildings
+            addBuilding(building) {
+                building.id = Date.now();
+                this.buildings.push(building);
+                this.saveToStorage('buildings', this.buildings);
+                return building;
+            }
+
+            getCurrentBuilding() {
+                return this.buildings.find(b => b.id === this.currentBuildingId) || this.buildings[0];
+            }
+
+            setCurrentBuilding(buildingId) {
+                this.currentBuildingId = buildingId;
+                this.saveToStorage('currentBuildingId', buildingId);
+            }
+
+            // Owners
+            addOwner(owner) {
+                owner.id = Date.now();
+                owner.buildingId = this.currentBuildingId;
+                this.owners.push(owner);
+                this.saveToStorage('owners', this.owners);
+                return owner;
+            }
+
+            getBuildingOwners() {
+                return this.owners.filter(owner => owner.buildingId === this.currentBuildingId);
+            }
+
+            // Transactions
+            addTransaction(transaction) {
+                transaction.id = Date.now();
+                transaction.buildingId = this.currentBuildingId;
+                transaction.createdAt = new Date().toISOString();
+                this.transactions.push(transaction);
+                this.saveToStorage('transactions', this.transactions);
+                return transaction;
+            }
+
+            getBuildingTransactions() {
+                return this.transactions.filter(t => t.buildingId === this.currentBuildingId);
+            }
+
+            getBuildingStats() {
+                const buildingTransactions = this.getBuildingTransactions();
+                const income = buildingTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + parseFloat(t.amount), 0);
+                const expenses = buildingTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + parseFloat(t.amount), 0);
+                const balance = income - expenses;
+                const transactionCount = buildingTransactions.length;
+
+                return {
+                    balance: balance.toFixed(2),
+                    income: income.toFixed(2),
+                    expenses: expenses.toFixed(2),
+                    transactionCount
+                };
+            }
+        }
+
+        // Initialize Data Manager
+        const dataManager = new DataManager();
+
         // DOM Elements
         const addBuildingBtn = document.getElementById('add-building-btn');
         const addOwnerBtn = document.getElementById('add-owner-btn');
@@ -739,71 +669,350 @@
         const closeReceiptBtn = document.getElementById('close-receipt-btn');
         const printReceiptBtn = document.getElementById('print-receipt-btn');
         const shareReceiptBtn = document.getElementById('share-receipt-btn');
-        
-        // Modal open/close functions
-        addBuildingBtn.addEventListener('click', () => addBuildingModal.classList.remove('hidden'));
-        addOwnerBtn.addEventListener('click', () => addOwnerModal.classList.remove('hidden'));
-        addPaymentBtn.addEventListener('click', () => addPaymentModal.classList.remove('hidden'));
-        cancelBuildingBtn.addEventListener('click', () => addBuildingModal.classList.add('hidden'));
-        cancelOwnerBtn.addEventListener('click', () => addOwnerModal.classList.add('hidden'));
-        cancelPaymentBtn.addEventListener('click', () => addPaymentModal.classList.add('hidden'));
-        closeReceiptBtn.addEventListener('click', () => receiptModal.classList.add('hidden'));
+        const buildingSelect = document.getElementById('building-select');
+        const paymentOwnerSelect = document.getElementById('payment-owner-select');
+        const advancePaymentCheckbox = document.getElementById('advance-payment-checkbox');
+        const monthsSelection = document.getElementById('months-selection');
+        const monthsGrid = document.getElementById('months-grid');
+        const statsContainer = document.getElementById('stats-container');
+        const transactionsContainer = document.getElementById('transactions-container');
+        const ownersCount = document.getElementById('owners-count');
 
-        // Close modals when clicking outside
-        window.addEventListener('click', (e) => {
-            if (e.target === addBuildingModal) addBuildingModal.classList.add('hidden');
-            if (e.target === addOwnerModal) addOwnerModal.classList.add('hidden');
-            if (e.target === addPaymentModal) addPaymentModal.classList.add('hidden');
-            if (e.target === receiptModal) receiptModal.classList.add('hidden');
-        });
+        // Initialize App
+        function initApp() {
+            loadBuildings();
+            loadStats();
+            loadTransactions();
+            loadOwners();
+            setupEventListeners();
+            setupMonthsGrid();
+            setCurrentDate();
+        }
 
-        // Form submissions
-        document.getElementById('add-building-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const buildingName = formData.get('buildingName');
-            document.getElementById('current-building').textContent = buildingName;
-            document.getElementById('receipt-building-name').textContent = buildingName;
-            addBuildingModal.classList.add('hidden');
-            alert(`تم إضافة العمارة "${buildingName}" بنجاح`);
-        });
+        function setupEventListeners() {
+            // Modal open/close
+            addBuildingBtn.addEventListener('click', () => addBuildingModal.classList.remove('hidden'));
+            addOwnerBtn.addEventListener('click', () => addOwnerModal.classList.remove('hidden'));
+            addPaymentBtn.addEventListener('click', () => {
+                loadOwnerSelect();
+                addPaymentModal.classList.remove('hidden');
+            });
+            
+            cancelBuildingBtn.addEventListener('click', () => addBuildingModal.classList.add('hidden'));
+            cancelOwnerBtn.addEventListener('click', () => addOwnerModal.classList.add('hidden'));
+            cancelPaymentBtn.addEventListener('click', () => addPaymentModal.classList.add('hidden'));
+            closeReceiptBtn.addEventListener('click', () => receiptModal.classList.add('hidden'));
 
-        document.getElementById('add-owner-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const ownerName = formData.get('name');
-            addOwnerModal.classList.add('hidden');
-            alert(`تم إضافة المالك "${ownerName}" بنجاح`);
-        });
+            // Close modals when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === addBuildingModal) addBuildingModal.classList.add('hidden');
+                if (e.target === addOwnerModal) addOwnerModal.classList.add('hidden');
+                if (e.target === addPaymentModal) addPaymentModal.classList.add('hidden');
+                if (e.target === receiptModal) receiptModal.classList.add('hidden');
+            });
 
-        document.getElementById('add-payment-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            addPaymentModal.classList.add('hidden');
-            receiptModal.classList.remove('hidden');
-        });
+            // Form submissions
+            document.getElementById('add-building-form').addEventListener('submit', handleAddBuilding);
+            document.getElementById('add-owner-form').addEventListener('submit', handleAddOwner);
+            document.getElementById('add-payment-form').addEventListener('submit', handleAddPayment);
 
-        // Month selection functionality
-        document.querySelectorAll('.month-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                if (button.classList.contains('bg-green-600')) {
-                    button.classList.replace('bg-green-600', 'bg-gray-200');
-                    button.classList.replace('text-white', 'text-gray-700');
-                    button.textContent = button.textContent.replace(' ×', '');
-                } else {
-                    button.classList.replace('bg-gray-200', 'bg-green-600');
-                    button.classList.replace('text-gray-700', 'text-white');
-                    button.textContent += ' ×';
+            // Building selection
+            buildingSelect.addEventListener('change', handleBuildingChange);
+
+            // Advance payment checkbox
+            advancePaymentCheckbox.addEventListener('change', () => {
+                monthsSelection.classList.toggle('hidden', !advancePaymentCheckbox.checked);
+            });
+
+            // Print receipt
+            printReceiptBtn.addEventListener('click', () => window.print());
+
+            // Share receipt
+            shareReceiptBtn.addEventListener('click', shareReceiptViaWhatsApp);
+        }
+
+        function setupMonthsGrid() {
+            const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+            monthsGrid.innerHTML = months.map(month => `
+                <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors" data-month="${month}">
+                    ${month}
+                </button>
+            `).join('');
+
+            // Month selection functionality
+            monthsGrid.addEventListener('click', (e) => {
+                if (e.target.classList.contains('month-btn')) {
+                    const button = e.target;
+                    if (button.classList.contains('bg-green-600')) {
+                        button.classList.replace('bg-green-600', 'bg-gray-200');
+                        button.classList.replace('text-white', 'text-gray-700');
+                        button.textContent = button.textContent.replace(' ×', '');
+                    } else {
+                        button.classList.replace('bg-gray-200', 'bg-green-600');
+                        button.classList.replace('text-gray-700', 'text-white');
+                        button.textContent += ' ×';
+                    }
                 }
             });
-        });
+        }
 
-        // Print receipt
-        printReceiptBtn.addEventListener('click', () => window.print());
+        function setCurrentDate() {
+            const now = new Date();
+            document.getElementById('payment-date').value = now.toISOString().split('T')[0];
+        }
 
-        // Share receipt via WhatsApp
-        shareReceiptBtn.addEventListener('click', () => {
-            const residentName = "محمد أحمد";
-            const unitNumber = "1";
+        function loadBuildings() {
+            buildingSelect.innerHTML = '<option value="">اختر العمارة...</option>';
+            dataManager.buildings.forEach(building => {
+                const option = document.createElement('option');
+                option.value = building.id;
+                option.textContent = building.name;
+                option.selected = building.id === dataManager.currentBuildingId;
+                buildingSelect.appendChild(option);
+            });
+            updateCurrentBuildingDisplay();
+        }
+
+        function loadOwnerSelect() {
+            paymentOwnerSelect.innerHTML = '<option value="">اختر مالك الشقة</option>';
+            dataManager.getBuildingOwners().forEach(owner => {
+                const option = document.createElement('option');
+                option.value = owner.id;
+                option.textContent = `${owner.name} - شقة ${owner.apartmentNumber}`;
+                paymentOwnerSelect.appendChild(option);
+            });
+        }
+
+        function updateCurrentBuildingDisplay() {
+            const currentBuilding = dataManager.getCurrentBuilding();
+            document.getElementById('current-building').textContent = currentBuilding.name;
+            document.getElementById('receipt-building-name').textContent = currentBuilding.name;
+        }
+
+        function handleBuildingChange(e) {
+            const buildingId = parseInt(e.target.value);
+            if (buildingId) {
+                dataManager.setCurrentBuilding(buildingId);
+                updateCurrentBuildingDisplay();
+                loadStats();
+                loadTransactions();
+                loadOwners();
+            }
+        }
+
+        function handleAddBuilding(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const building = {
+                name: formData.get('buildingName'),
+                address: formData.get('buildingAddress'),
+                units: parseInt(formData.get('unitsCount')) || 0,
+                notes: formData.get('notes')
+            };
+
+            const newBuilding = dataManager.addBuilding(building);
+            addBuildingModal.classList.add('hidden');
+            loadBuildings();
+            dataManager.setCurrentBuilding(newBuilding.id);
+            
+            alert(`تم إضافة العمارة "${building.name}" بنجاح`);
+            e.target.reset();
+        }
+
+        function handleAddOwner(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const owner = {
+                name: formData.get('name'),
+                phone: formData.get('phone'),
+                apartmentNumber: formData.get('apartmentNumber'),
+                floor: formData.get('floor'),
+                direction: formData.get('direction'),
+                subscription: parseFloat(formData.get('subscription')) || 0,
+                notes: formData.get('notes')
+            };
+
+            dataManager.addOwner(owner);
+            addOwnerModal.classList.add('hidden');
+            loadOwners();
+            
+            alert(`تم إضافة المالك "${owner.name}" بنجاح`);
+            e.target.reset();
+        }
+
+        function handleAddPayment(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const selectedMonths = Array.from(monthsGrid.querySelectorAll('.month-btn.bg-green-600'))
+                .map(btn => btn.textContent.replace(' ×', ''));
+            
+            const transaction = {
+                type: formData.get('type'),
+                amount: parseFloat(formData.get('amount')) || 0,
+                description: formData.get('description'),
+                ownerId: parseInt(formData.get('owner')),
+                date: formData.get('date'),
+                advancePayment: advancePaymentCheckbox.checked,
+                selectedMonths: selectedMonths,
+                notes: formData.get('notes')
+            };
+
+            const newTransaction = dataManager.addTransaction(transaction);
+            addPaymentModal.classList.add('hidden');
+            loadStats();
+            loadTransactions();
+            
+            // Show receipt
+            showReceipt(newTransaction);
+            e.target.reset();
+            advancePaymentCheckbox.checked = false;
+            monthsSelection.classList.add('hidden');
+            // Reset month buttons
+            monthsGrid.querySelectorAll('.month-btn').forEach(btn => {
+                btn.classList.replace('bg-green-600', 'bg-gray-200');
+                btn.classList.replace('text-white', 'text-gray-700');
+                btn.textContent = btn.textContent.replace(' ×', '');
+            });
+        }
+
+        function loadStats() {
+            const stats = dataManager.getBuildingStats();
+            const currentBuilding = dataManager.getCurrentBuilding();
+            
+            statsContainer.innerHTML = `
+                <div class="bg-blue-50 rounded-lg p-4 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-600 text-sm">الرصيد الفعلي</p>
+                            <p class="text-blue-600 text-2xl font-bold">${stats.balance} د.ل</p>
+                        </div>
+                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">+5%</span>
+                    </div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-600 text-sm">الواردات</p>
+                            <p class="text-green-600 text-2xl font-bold">${stats.income} د.ل</p>
+                        </div>
+                        <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded-full">0%</span>
+                    </div>
+                </div>
+                <div class="bg-red-50 rounded-lg p-4 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-600 text-sm">المصروفات</p>
+                            <p class="text-red-600 text-2xl font-bold">${stats.expenses} د.ل</p>
+                        </div>
+                        <span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">-2%</span>
+                    </div>
+                </div>
+                <div class="bg-purple-50 rounded-lg p-4 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-600 text-sm">عدد المعاملات</p>
+                            <p class="text-purple-600 text-2xl font-bold">${stats.transactionCount}</p>
+                        </div>
+                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">+15%</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadTransactions() {
+            const transactions = dataManager.getBuildingTransactions();
+            const owners = dataManager.getBuildingOwners();
+            
+            if (transactions.length === 0) {
+                transactionsContainer.innerHTML = `
+                    <div class="bg-white p-8 text-center">
+                        <i class="fas fa-receipt text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">لا توجد معاملات مسجلة بعد</p>
+                        <button id="add-first-payment" class="bg-green-600 text-white px-4 py-2 rounded-lg mt-4 hover:bg-green-700 transition-colors">
+                            إضافة أول دفعة
+                        </button>
+                    </div>
+                `;
+                document.getElementById('add-first-payment').addEventListener('click', () => {
+                    loadOwnerSelect();
+                    addPaymentModal.classList.remove('hidden');
+                });
+                return;
+            }
+
+            const bgColors = ['bg-blue-50', 'bg-green-50', 'bg-pink-50', 'bg-yellow-50'];
+            
+            transactionsContainer.innerHTML = transactions.map((transaction, index) => {
+                const owner = owners.find(o => o.id === transaction.ownerId) || { name: 'غير معروف', apartmentNumber: '--' };
+                const bgColor = bgColors[index % bgColors.length];
+                const date = new Date(transaction.date).toLocaleDateString('ar-EG');
+                const time = new Date(transaction.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+                
+                return `
+                    <div class="${bgColor} p-4 border-b border-gray-200 fade-in">
+                        <div class="flex justify-between items-center flex-col md:flex-row gap-4">
+                            <div class="flex items-center space-x-4 space-x-reverse">
+                                <input type="checkbox" class="h-4 w-4 text-blue-600 rounded">
+                                <div class="flex flex-col">
+                                    <span class="font-semibold text-gray-800">${owner.name}</span>
+                                    <span class="text-sm text-gray-600">${date} - ${time}</span>
+                                    <span class="text-xs text-gray-500">شقة ${owner.apartmentNumber}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-4 space-x-reverse flex-wrap justify-center gap-2">
+                                <span class="bg-${transaction.type === 'income' ? 'green' : 'red'}-100 text-${transaction.type === 'income' ? 'green' : 'red'}-800 px-3 py-1 rounded-full text-xs font-medium">
+                                    ${transaction.type === 'income' ? 'واردات' : 'مصروفات'}
+                                </span>
+                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg font-semibold">
+                                    ${transaction.amount} د.ل
+                                </span>
+                                <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm share-btn" data-id="${transaction.id}">
+                                    <i class="fab fa-whatsapp mr-1"></i> مشاركة عبر واتساب
+                                </button>
+                                <button class="text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                            </div>
+                        </div>
+                        ${transaction.description ? `<p class="text-sm text-gray-600 mt-2">${transaction.description}</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            // Add event listeners to share buttons
+            transactionsContainer.querySelectorAll('.share-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const transactionId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    shareTransactionViaWhatsApp(transactionId);
+                });
+            });
+        }
+
+        function loadOwners() {
+            const owners = dataManager.getBuildingOwners();
+            ownersCount.textContent = owners.length;
+        }
+
+        function showReceipt(transaction) {
+            const owner = dataManager.getBuildingOwners().find(o => o.id === transaction.ownerId) || { name: 'غير معروف', apartmentNumber: '--' };
+            const currentBuilding = dataManager.getCurrentBuilding();
+            
+            document.getElementById('receipt-number').textContent = transaction.id;
+            document.getElementById('receipt-date').textContent = new Date(transaction.date).toLocaleDateString('ar-EG') + ' م';
+            document.getElementById('receipt-description').textContent = transaction.description || 'لا يوجد وصف';
+            document.getElementById('receipt-resident').textContent = owner.name;
+            document.getElementById('receipt-unit').textContent = owner.apartmentNumber;
+            document.getElementById('receipt-amount').textContent = `${transaction.amount} دينار ليبي`;
+            document.getElementById('receipt-notes').textContent = transaction.notes || 'لا توجد ملاحظات';
+            document.getElementById('receipt-building-name').textContent = currentBuilding.name;
+
+            receiptModal.classList.remove('hidden');
+        }
+
+        function shareReceiptViaWhatsApp() {
+            const residentName = document.getElementById('receipt-resident').textContent;
+            const unitNumber = document.getElementById('receipt-unit').textContent;
             const buildingName = document.getElementById('receipt-building-name').textContent;
             const paymentDate = document.getElementById('receipt-date').textContent;
             const paymentAmount = document.getElementById('receipt-amount').textContent;
@@ -826,46 +1035,31 @@
 🤝🏻 شكراً لك لالتزامك`;
             
             window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-        });
+        }
 
-        // Share transaction via WhatsApp buttons
-        document.querySelectorAll('.share-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                const transactionId = button.getAttribute('data-id');
-                const transaction = getTransactionData(transactionId);
-                
-                const message = `🏢 *برنامج B Sakan لإدارة مصروفات العمارات*
+        function shareTransactionViaWhatsApp(transactionId) {
+            const transaction = dataManager.transactions.find(t => t.id === transactionId);
+            const owner = dataManager.getBuildingOwners().find(o => o.id === transaction.ownerId) || { name: 'غير معروف', apartmentNumber: '--' };
+            const currentBuilding = dataManager.getCurrentBuilding();
+            const currentDate = new Date().toLocaleDateString('ar-EG');
+            
+            const message = `🏢 *برنامج B Sakan لإدارة مصروفات العمارات*
 شركة B Ventures LLC
 📋 *تفاصيل الدفعة*
 ━━━━━━━━━━━━━━━━
-👤 اسم المستفيد: ${transaction.residentName}
-🏠 رقم الوحدة: ${transaction.unitNumber}
-🏬 العمارة: ${transaction.buildingName}
-📅 تاريخ الدفع: ${transaction.paymentDate}
-💵 المبلغ: ${transaction.paymentAmount}
-🗒️ وصف الدفعة: ${transaction.paymentDescription}
-📌 ملاحظات: ${transaction.paymentNotes}
-✅ تم استلام المبلغ بنجاح ${transaction.currentDate}
+👤 اسم المستفيد: ${owner.name}
+🏠 رقم الوحدة: ${owner.apartmentNumber}
+🏬 العمارة: ${currentBuilding.name}
+📅 تاريخ الدفع: ${new Date(transaction.date).toLocaleDateString('ar-EG')}
+💵 المبلغ: ${transaction.amount} د.ل
+🗒️ وصف الدفعة: ${transaction.description || 'لا يوجد وصف'}
+📌 ملاحظات: ${transaction.notes || 'لا توجد ملاحظات'}
+${transaction.advancePayment && transaction.selectedMonths.length > 0 ? `📅 الأشهر المدفوعة: ${transaction.selectedMonths.join('، ')}` : ''}
+✅ تم استلام المبلغ بنجاح ${currentDate}
 🤝🏻 شكراً لك لالتزامك`;
                 
-                window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-            });
-        });
-
-        // Mock transaction data
-        function getTransactionData(id) {
-            const transactions = {
-                '1': { residentName: 'محمد أحمد', unitNumber: '1', buildingName: 'عمارة السالم 12', paymentDate: '2025-10-16', paymentAmount: '19 د.ل', paymentDescription: 'اشتراك شقة رقم 1', paymentNotes: 'دفعة شهر أكتوبر', currentDate: new Date().toLocaleDateString('ar-EG') },
-                '2': { residentName: 'فاطمة محمد', unitNumber: '2', buildingName: 'عمارة السالم 12', paymentDate: '2025-10-15', paymentAmount: '12 د.ل', paymentDescription: 'اشتراك شقة رقم 2', paymentNotes: 'دفعة شهر أكتوبر', currentDate: new Date().toLocaleDateString('ar-EG') },
-                '3': { residentName: 'أحمد علي', unitNumber: '3', buildingName: 'عمارة السالم 12', paymentDate: '2025-10-14', paymentAmount: '15 د.ل', paymentDescription: 'اشتراك شقة رقم 3', paymentNotes: 'دفعة شهر أكتوبر', currentDate: new Date().toLocaleDateString('ar-EG') },
-                '4': { residentName: 'سارة خالد', unitNumber: '4', buildingName: 'عمارة السالم 12', paymentDate: '2025-10-13', paymentAmount: '22 د.ل', paymentDescription: 'اشتراك شقة رقم 4', paymentNotes: 'دفعة شهر أكتوبر', currentDate: new Date().toLocaleDateString('ar-EG') }
-            };
-            return transactions[id] || transactions['1'];
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
         }
-
-        // Set current date in receipt
-        const now = new Date();
-        document.getElementById('receipt-date').textContent = now.toLocaleDateString('ar-EG') + ' م';
 
         // Service Worker Registration
         if ('serviceWorker' in navigator) {
@@ -875,6 +1069,9 @@
                     .catch(err => console.log('SW registration failed'));
             });
         }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
