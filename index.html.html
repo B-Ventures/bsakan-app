@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B Sakan - إدارة مصروفات العمارات</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="B Sakan">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="B Sakan">
+    <meta name="description" content="برنامج متكامل لإدارة العمارات والمصروفات">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-TileColor" content="#3b82f6">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="theme-color" content="#3b82f6">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" href="assets/icons/icon-72x72.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- External Resources -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+        
+        * {
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        .space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+            --tw-space-x-reverse: 1;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+        
+        .receipt-border {
+            border: 2px solid #000;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app" class="app-container">
+        <!-- Header -->
+        <header class="bg-white shadow-sm sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 py-4">
+                <div class="flex justify-between items-center flex-col md:flex-row gap-4">
+                    <div class="text-center md:text-right">
+                        <h1 class="text-2xl font-bold text-gray-800">برنامج B Sakan لإدارة مصروفات العمارات</h1>
+                        <p class="text-gray-600" id="current-building">عمارة السالم 12</p>
+                    </div>
+                    <div class="flex space-x-3 space-x-reverse flex-wrap justify-center gap-2">
+                        <button id="add-building-btn" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                            <i class="fas fa-building mr-1"></i> إضافة عمارة
+                        </button>
+                        <button id="add-owner-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-user-plus mr-1"></i> إضافة مالك
+                        </button>
+                        <button id="add-payment-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-money-bill-wave mr-1"></i> إضافة دفعة
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 py-6">
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-blue-50 rounded-lg p-4 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-600 text-sm">الرصيد الفعلي</p>
+                            <p class="text-blue-600 text-2xl font-bold">181 د.ل</p>
+                        </div>
+                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">+5%</span>
+                    </div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-600 text-sm">الدفعات</p>
+                            <p class="text-green-600 text-2xl font-bold">0 د.ل</p>
+                        </div>
+                        <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded-full">0%</span>
+                    </div>
+                </div>
+                <div class="bg-red-50 rounded-lg p-4 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-600 text-sm">المسحوبات</p>
+                            <p class="text-red-600 text-2xl font-bold">5 د.ل</p>
+                        </div>
+                        <span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">-2%</span>
+                    </div>
+                </div>
+                <div class="bg-purple-50 rounded-lg p-4 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-600 text-sm">عدد التوصيل</p>
+                            <p class="text-purple-600 text-2xl font-bold">10</p>
+                        </div>
+                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">+15%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filter Section -->
+            <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+                <div class="flex justify-between items-center flex-col md:flex-row gap-4">
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full md:w-auto">
+                        تصفية الحساب الشهري
+                    </button>
+                    <div class="flex space-x-2 space-x-reverse w-full md:w-auto justify-center">
+                        <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors">
+                            حسابات ال (5)
+                        </button>
+                        <button class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                            جميع العمليات
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Delivery/Payment List -->
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <!-- Transaction 1 -->
+                <div class="bg-blue-50 p-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center flex-col md:flex-row gap-4">
+                        <div class="flex items-center space-x-4 space-x-reverse">
+                            <input type="checkbox" class="h-4 w-4 text-blue-600 rounded">
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-gray-800">محمد أحمد</span>
+                                <span class="text-sm text-gray-600">2025-10-16 - 10:30 ص</span>
+                                <span class="text-xs text-gray-500">ACC-001</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 space-x-reverse flex-wrap justify-center gap-2">
+                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium">
+                                عمليات سابقة
+                            </span>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg font-semibold">
+                                19 د.ل
+                            </span>
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm share-btn" data-id="1">
+                                <i class="fab fa-whatsapp mr-1"></i> مشاركة عبر واتساب
+                            </button>
+                            <button class="text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Transaction 2 -->
+                <div class="bg-green-50 p-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center flex-col md:flex-row gap-4">
+                        <div class="flex items-center space-x-4 space-x-reverse">
+                            <input type="checkbox" class="h-4 w-4 text-blue-600 rounded">
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-gray-800">فاطمة محمد</span>
+                                <span class="text-sm text-gray-600">2025-10-15 - 02:15 م</span>
+                                <span class="text-xs text-gray-500">ACC-002</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 space-x-reverse flex-wrap justify-center gap-2">
+                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium">
+                                عمليات سابقة
+                            </span>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg font-semibold">
+                                12 د.ل
+                            </span>
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm share-btn" data-id="2">
+                                <i class="fab fa-whatsapp mr-1"></i> مشاركة عبر واتساب
+                            </button>
+                            <button class="text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Transaction 3 -->
+                <div class="bg-pink-50 p-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center flex-col md:flex-row gap-4">
+                        <div class="flex items-center space-x-4 space-x-reverse">
+                            <input type="checkbox" class="h-4 w-4 text-blue-600 rounded">
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-gray-800">أحمد علي</span>
+                                <span class="text-sm text-gray-600">2025-10-14 - 09:45 ص</span>
+                                <span class="text-xs text-gray-500">ACC-003</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 space-x-reverse flex-wrap justify-center gap-2">
+                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium">
+                                عمليات سابقة
+                            </span>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg font-semibold">
+                                15 د.ل
+                            </span>
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm share-btn" data-id="3">
+                                <i class="fab fa-whatsapp mr-1"></i> مشاركة عبر واتساب
+                            </button>
+                            <button class="text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Transaction 4 -->
+                <div class="bg-yellow-50 p-4">
+                    <div class="flex justify-between items-center flex-col md:flex-row gap-4">
+                        <div class="flex items-center space-x-4 space-x-reverse">
+                            <input type="checkbox" class="h-4 w-4 text-blue-600 rounded">
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-gray-800">سارة خالد</span>
+                                <span class="text-sm text-gray-600">2025-10-13 - 04:20 م</span>
+                                <span class="text-xs text-gray-500">ACC-004</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 space-x-reverse flex-wrap justify-center gap-2">
+                            <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium">
+                                عمليات سابقة
+                            </span>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg font-semibold">
+                                22 د.ل
+                            </span>
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm share-btn" data-id="4">
+                                <i class="fab fa-whatsapp mr-1"></i> مشاركة عبر واتساب
+                            </button>
+                            <button class="text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-8 mt-8">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">عن البرنامج</h3>
+                        <p class="text-gray-300">برنامج B Sakan لإدارة العمارات والمصروفات</p>
+                        <p class="text-gray-300 mt-2">شركة B Ventures LLC</p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">روابط سريعة</h3>
+                        <ul class="space-y-2 text-gray-300">
+                            <li><a href="#" class="hover:text-white transition-colors">الدعم الفني</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">الشروط والأحكام</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">الأسئلة الشائعة</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">اتصل بنا</h3>
+                        <ul class="space-y-2 text-gray-300">
+                            <li><i class="fas fa-envelope mr-2"></i> info@bsakan.com</li>
+                            <li><i class="fas fa-phone mr-2"></i> +218-91-123-4567</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">تابعنا</h3>
+                        <div class="flex space-x-4 space-x-reverse">
+                            <a href="#" class="text-gray-300 hover:text-white transition-colors"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="text-gray-300 hover:text-white transition-colors"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="text-gray-300 hover:text-white transition-colors"><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 mt-8 pt-4 text-center text-gray-400">
+                    <p>© 2025 برنامج B Sakan. جميع الحقوق محفوظة. شركة B Ventures LLC</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Add Building Modal -->
+    <div id="add-building-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg w-full max-w-md">
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">إضافة عمارة جديدة</h2>
+                <p class="text-gray-600 mb-6">أدخل تفاصيل العمارة الجديدة</p>
+                
+                <form id="add-building-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            اسم العمارة *
+                        </label>
+                        <input
+                            type="text"
+                            name="buildingName"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="أدخل اسم العمارة"
+                            required
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            العنوان
+                        </label>
+                        <input
+                            type="text"
+                            name="buildingAddress"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="أدخل عنوان العمارة"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            عدد الوحدات
+                        </label>
+                        <input
+                            type="number"
+                            name="unitsCount"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="عدد الوحدات السكنية"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            ملاحظات (اختياري)
+                        </label>
+                        <textarea
+                            name="notes"
+                            rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="أي ملاحظات إضافية..."
+                        ></textarea>
+                    </div>
+                    
+                    <div class="flex space-x-3 space-x-reverse pt-4">
+                        <button
+                            type="submit"
+                            class="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                        >
+                            إضافة العمارة
+                        </button>
+                        <button
+                            type="button"
+                            id="cancel-building-btn"
+                            class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Owner Modal -->
+    <div id="add-owner-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg w-full max-w-md">
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">إضافة مالك جديد</h2>
+                <p class="text-gray-600 mb-6">أدخل تفاصيل مالك الشقة الجديد</p>
+                
+                <form id="add-owner-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            اسم المالك *
+                        </label>
+                        <input
+                            type="text"
+                            name="name"
+                            class="w-full px-3 py-2 border border-green-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            placeholder="أدخل اسم المالك"
+                            required
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            رقم الهاتف
+                        </label>
+                        <input
+                            type="tel"
+                            name="phone"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="0791234567"
+                        />
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                رقم الشقة
+                            </label>
+                            <input
+                                type="text"
+                                name="apartmentNumber"
+                                value="1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                الطابق
+                            </label>
+                            <input
+                                type="text"
+                                name="floor"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="الأول"
+                            />
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            اتجاه الشقة
+                        </label>
+                        <select
+                            name="direction"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">اختر اتجاه الشقة</option>
+                            <option value="north">شمال</option>
+                            <option value="south">جنوب</option>
+                            <option value="east">شرق</option>
+                            <option value="west">غرب</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            الاشتراك الشهري (د.ل)
+                        </label>
+                        <input
+                            type="number"
+                            name="subscription"
+                            value="100.00"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            step="0.01"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            ملاحظات (اختياري)
+                        </label>
+                        <textarea
+                            name="notes"
+                            rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="أي ملاحظات إضافية..."
+                        ></textarea>
+                    </div>
+                    
+                    <div class="flex space-x-3 space-x-reverse pt-4">
+                        <button
+                            type="submit"
+                            class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                            إضافة المالك
+                        </button>
+                        <button
+                            type="button"
+                            id="cancel-owner-btn"
+                            class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Payment Modal -->
+    <div id="add-payment-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">إضافة دفعة جديدة</h2>
+                <p class="text-gray-600 mb-6">أدخل تفاصيل الدفعة الجديدة سواء كانت واردات أو مصروفات</p>
+                
+                <form id="add-payment-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            نوع الدفعة
+                        </label>
+                        <select
+                            name="type"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="income">واردات</option>
+                            <option value="expense">مصروفات</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            المبلغ (د.ل)
+                        </label>
+                        <input
+                            type="number"
+                            name="amount"
+                            value="0.00"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            step="0.01"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            وصف الدفعة
+                        </label>
+                        <input
+                            type="text"
+                            name="description"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="مثالاً: اشتراك شقة رقم 1 أو أجرة سباك"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            مالك الشقة *
+                        </label>
+                        <select
+                            name="owner"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                        >
+                            <option value="">اختر مالك الشقة</option>
+                            <option value="owner1">محمد أحمد - شقة 1</option>
+                            <option value="owner2">فاطمة محمد - شقة 2</option>
+                            <option value="owner3">أحمد علي - شقة 3</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            تاريخ الدفعة
+                        </label>
+                        <input
+                            type="date"
+                            name="date"
+                            value="2025-10-16"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <input
+                            type="checkbox"
+                            name="advancePayment"
+                            checked
+                            class="h-4 w-4 text-blue-600 rounded"
+                            id="advance-payment-checkbox"
+                        />
+                        <label for="advance-payment-checkbox" class="text-sm font-medium text-gray-700">
+                            دفعة مقدمة لعدة شهور
+                        </label>
+                    </div>
+                    
+                    <div id="months-selection" class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm font-medium text-gray-700 mb-2">اختر الشهور المدفوعة</p>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                            <button type="button" class="month-btn bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium" data-month="يناير">
+                                يناير ×
+                            </button>
+                            <button type="button" class="month-btn bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium" data-month="فبراير">
+                                فبراير ×
+                            </button>
+                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="مارس">
+                                مارس
+                            </button>
+                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="أبريل">
+                                أبريل
+                            </button>
+                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="مايو">
+                                مايو
+                            </button>
+                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="يونيو">
+                                يونيو
+                            </button>
+                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="يوليو">
+                                يوليو
+                            </button>
+                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="أغسطس">
+                                أغسطس
+                            </button>
+                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="سبتمبر">
+                                سبتمبر
+                            </button>
+                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="أكتوبر">
+                                أكتوبر
+                            </button>
+                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="نوفمبر">
+                                نوفمبر
+                            </button>
+                            <button type="button" class="month-btn bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-300" data-month="ديسمبر">
+                                ديسمبر
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            ملاحظات (اختياري)
+                        </label>
+                        <textarea
+                            name="notes"
+                            rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="أي ملاحظات إضافية..."
+                        ></textarea>
+                    </div>
+                    
+                    <div class="flex space-x-3 space-x-reverse pt-4">
+                        <button
+                            type="submit"
+                            class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                            إضافة الدفعة
+                        </button>
+                        <button
+                            type="button"
+                            id="cancel-payment-btn"
+                            class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div id="receipt-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg w-full max-w-md receipt-border">
+            <div class="p-6">
+                <!-- Header -->
+                <div class="text-center mb-6">
+                    <div class="flex items-center justify-center mb-2">
+                        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg ml-2">
+                            B
+                        </div>
+                        <span class="text-xl font-bold">Sakan</span>
+                    </div>
+                    <p class="text-gray-600 text-sm">شركة B Ventures LLC</p>
+                    <h1 class="text-lg font-bold mt-2">برنامج B Sakan لإدارة وإصلاح ومصروفات العمارات</h1>
+                    <p class="text-red-500 font-semibold" id="receipt-building-name">عمارة السالم 12</p>
+                </div>
+                
+                <!-- Receipt Details -->
+                <div class="border-t border-b border-gray-300 py-4 mb-4">
+                    <div class="text-center mb-4">
+                        <h2 class="text-xl font-bold">سند قبض</h2>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="font-medium">رقم السند:</span>
+                            <span id="receipt-number">50</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">التاريخ:</span>
+                            <span id="receipt-date">10-16-2025 م (1447-04-24 هـ)</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">وصف الدفعة:</span>
+                            <span id="receipt-description">تأمين للعمارة</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Amount Section -->
+                <div class="border-2 border-green-500 rounded-lg p-4 mb-6 text-center">
+                    <p class="text-gray-600 mb-2">المبلغ المستلم</p>
+                    <p class="text-green-600 text-3xl font-bold" id="receipt-amount">50 دينار ليبي</p>
+                </div>
+                
+                <!-- Footer -->
+                <div class="text-center text-gray-600">
+                    <p class="font-medium mb-2">ملاحظات:</p>
+                    <p class="mb-4" id="receipt-notes">قسط التامين السنوي</p>
+                    <div class="flex items-center justify-center">
+                        <span>www.bsakan.com</span>
+                        <svg class="w-4 h-4 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="mt-6 text-center flex space-x-3 space-x-reverse justify-center">
+                    <button id="print-receipt-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-print mr-1"></i> طباعة
+                    </button>
+                    <button id="share-receipt-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fab fa-whatsapp mr-1"></i> مشاركة عبر واتساب
+                    </button>
+                    <button id="close-receipt-btn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors">
+                        إغلاق
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // DOM Elements
+        const addBuildingBtn = document.getElementById('add-building-btn');
+        const addOwnerBtn = document.getElementById('add-owner-btn');
+        const addPaymentBtn = document.getElementById('add-payment-btn');
+        const addBuildingModal = document.getElementById('add-building-modal');
+        const addOwnerModal = document.getElementById('add-owner-modal');
+        const addPaymentModal = document.getElementById('add-payment-modal');
+        const receiptModal = document.getElementById('receipt-modal');
+        const cancelBuildingBtn = document.getElementById('cancel-building-btn');
+        const cancelOwnerBtn = document.getElementById('cancel-owner-btn');
+        const cancelPaymentBtn = document.getElementById('cancel-payment-btn');
+        const closeReceiptBtn = document.getElementById('close-receipt-btn');
+        const printReceiptBtn = document.getElementById('print-receipt-btn');
+        const shareReceiptBtn = document.getElementById('share-receipt-btn');
+        
+        // Modal open/close functions
+        addBuildingBtn.addEventListener('click', () => addBuildingModal.classList.remove('hidden'));
+        addOwnerBtn.addEventListener('click', () => addOwnerModal.classList.remove('hidden'));
+        addPaymentBtn.addEventListener('click', () => addPaymentModal.classList.remove('hidden'));
+        cancelBuildingBtn.addEventListener('click', () => addBuildingModal.classList.add('hidden'));
+        cancelOwnerBtn.addEventListener('click', () => addOwnerModal.classList.add('hidden'));
+        cancelPaymentBtn.addEventListener('click', () => addPaymentModal.classList.add('hidden'));
+        closeReceiptBtn.addEventListener('click', () => receiptModal.classList.add('hidden'));
+
+        // Close modals when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === addBuildingModal) addBuildingModal.classList.add('hidden');
+            if (e.target === addOwnerModal) addOwnerModal.classList.add('hidden');
+            if (e.target === addPaymentModal) addPaymentModal.classList.add('hidden');
+            if (e.target === receiptModal) receiptModal.classList.add('hidden');
+        });
+
+        // Form submissions
+        document.getElementById('add-building-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const buildingName = formData.get('buildingName');
+            document.getElementById('current-building').textContent = buildingName;
+            document.getElementById('receipt-building-name').textContent = buildingName;
+            addBuildingModal.classList.add('hidden');
+            alert(`تم إضافة العمارة "${buildingName}" بنجاح`);
+        });
+
+        document.getElementById('add-owner-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const ownerName = formData.get('name');
+            addOwnerModal.classList.add('hidden');
+            alert(`تم إضافة المالك "${ownerName}" بنجاح`);
+        });
+
+        document.getElementById('add-payment-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            addPaymentModal.classList.add('hidden');
+            receiptModal.classList.remove('hidden');
+        });
+
+        // Month selection functionality
+        document.querySelectorAll('.month-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                if (button.classList.contains('bg-green-600')) {
+                    button.classList.replace('bg-green-600', 'bg-gray-200');
+                    button.classList.replace('text-white', 'text-gray-700');
+                    button.textContent = button.textContent.replace(' ×', '');
+                } else {
+                    button.classList.replace('bg-gray-200', 'bg-green-600');
+                    button.classList.replace('text-gray-700', 'text-white');
+                    button.textContent += ' ×';
+                }
+            });
+        });
+
+        // Print receipt
+        printReceiptBtn.addEventListener('click', () => window.print());
+
+        // Share receipt via WhatsApp
+        shareReceiptBtn.addEventListener('click', () => {
+            const residentName = "محمد أحمد";
+            const unitNumber = "1";
+            const buildingName = document.getElementById('receipt-building-name').textContent;
+            const paymentDate = document.getElementById('receipt-date').textContent;
+            const paymentAmount = document.getElementById('receipt-amount').textContent;
+            const paymentDescription = document.getElementById('receipt-description').textContent;
+            const paymentNotes = document.getElementById('receipt-notes').textContent;
+            const currentDate = new Date().toLocaleDateString('ar-EG');
+            
+            const message = `🏢 *برنامج B Sakan لإدارة مصروفات العمارات*
+شركة B Ventures LLC
+📋 *تفاصيل الدفعة*
+━━━━━━━━━━━━━━━━
+👤 اسم المستفيد: ${residentName}
+🏠 رقم الوحدة: ${unitNumber}
+🏬 العمارة: ${buildingName}
+📅 تاريخ الدفع: ${paymentDate}
+💵 المبلغ: ${paymentAmount}
+🗒️ وصف الدفعة: ${paymentDescription}
+📌 ملاحظات: ${paymentNotes}
+✅ تم استلام المبلغ بنجاح ${currentDate}
+🤝🏻 شكراً لك لالتزامك`;
+            
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+        });
+
+        // Share transaction via WhatsApp buttons
+        document.querySelectorAll('.share-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const transactionId = button.getAttribute('data-id');
+                const transaction = getTransactionData(transactionId);
+                
+                const message = `🏢 *برنامج B Sakan لإدارة مصروفات العمارات*
+شركة B Ventures LLC
+📋 *تفاصيل الدفعة*
+━━━━━━━━━━━━━━━━
+👤 اسم المستفيد: ${transaction.residentName}
+🏠 رقم الوحدة: ${transaction.unitNumber}
+🏬 العمارة: ${transaction.buildingName}
+📅 تاريخ الدفع: ${transaction.paymentDate}
+💵 المبلغ: ${transaction.paymentAmount}
+🗒️ وصف الدفعة: ${transaction.paymentDescription}
+📌 ملاحظات: ${transaction.paymentNotes}
+✅ تم استلام المبلغ بنجاح ${transaction.currentDate}
+🤝🏻 شكراً لك لالتزامك`;
+                
+                window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+            });
+        });
+
+        // Mock transaction data
+        function getTransactionData(id) {
+            const transactions = {
+                '1': { residentName: 'محمد أحمد', unitNumber: '1', buildingName: 'عمارة السالم 12', paymentDate: '2025-10-16', paymentAmount: '19 د.ل', paymentDescription: 'اشتراك شقة رقم 1', paymentNotes: 'دفعة شهر أكتوبر', currentDate: new Date().toLocaleDateString('ar-EG') },
+                '2': { residentName: 'فاطمة محمد', unitNumber: '2', buildingName: 'عمارة السالم 12', paymentDate: '2025-10-15', paymentAmount: '12 د.ل', paymentDescription: 'اشتراك شقة رقم 2', paymentNotes: 'دفعة شهر أكتوبر', currentDate: new Date().toLocaleDateString('ar-EG') },
+                '3': { residentName: 'أحمد علي', unitNumber: '3', buildingName: 'عمارة السالم 12', paymentDate: '2025-10-14', paymentAmount: '15 د.ل', paymentDescription: 'اشتراك شقة رقم 3', paymentNotes: 'دفعة شهر أكتوبر', currentDate: new Date().toLocaleDateString('ar-EG') },
+                '4': { residentName: 'سارة خالد', unitNumber: '4', buildingName: 'عمارة السالم 12', paymentDate: '2025-10-13', paymentAmount: '22 د.ل', paymentDescription: 'اشتراك شقة رقم 4', paymentNotes: 'دفعة شهر أكتوبر', currentDate: new Date().toLocaleDateString('ar-EG') }
+            };
+            return transactions[id] || transactions['1'];
+        }
+
+        // Set current date in receipt
+        const now = new Date();
+        document.getElementById('receipt-date').textContent = now.toLocaleDateString('ar-EG') + ' م';
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/bsakan-app/sw.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed'));
+            });
+        }
+    </script>
+</body>
+</html>

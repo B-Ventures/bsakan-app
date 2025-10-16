@@ -1,0 +1,31 @@
+{
+  "name": "B Sakan - إدارة مصروفات العمارات",
+  "short_name": "B Sakan",
+  "description": "برنامج متكامل لإدارة العمارات والمصروفات - شركة B Ventures LLC",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/bsakan-app/",
+  "scope": "/bsakan-app/",
+  "display": "standalone",
+  "theme_color": "#3b82f6",
+  "background_color": "#f9fafb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"]
+}
