@@ -47,12 +47,22 @@
             }
             body {
                 background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
             .receipt-print {
                 border: 2px solid #000 !important;
                 margin: 0 !important;
                 padding: 20px !important;
                 box-shadow: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                page-break-after: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            @page {
+                margin: 0;
+                size: auto;
             }
         }
         
@@ -67,6 +77,21 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tab-active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            min-width: 120px;
         }
     </style>
 </head>
@@ -107,26 +132,41 @@
                 <!-- Stats will be loaded dynamically -->
             </div>
             
-            <!-- Filter Section -->
+            <!-- Tabs Section -->
             <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
                 <div class="flex justify-between items-center flex-col md:flex-row gap-4">
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full md:w-auto">
-                        تصفية الحساب الشهري
-                    </button>
-                    <div class="flex space-x-2 space-x-reverse w-full md:w-auto justify-center">
-                        <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors">
-                            حسابات ال (<span id="owners-count">0</span>)
+                    <div class="flex space-x-2 space-x-reverse w-full md:w-auto">
+                        <button id="tab-payments" class="tab-active px-4 py-2 rounded-lg transition-colors">
+                            المعاملات
                         </button>
-                        <button class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
-                            جميع العمليات
+                        <button id="tab-owners" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                            المالكين (<span id="owners-count">0</span>)
+                        </button>
+                    </div>
+                    
+                    <div class="flex space-x-2 space-x-reverse w-full md:w-auto justify-center">
+                        <select id="month-filter" class="bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">جميع الأشهر</option>
+                        </select>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            تصفية الحساب الشهري
                         </button>
                     </div>
                 </div>
             </div>
             
-            <!-- Delivery/Payment List -->
-            <div class="bg-white rounded-lg shadow-sm overflow-hidden" id="transactions-container">
-                <!-- Transactions will be loaded dynamically -->
+            <!-- Payments Tab Content -->
+            <div id="payments-tab" class="tab-content">
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden" id="transactions-container">
+                    <!-- Transactions will be loaded dynamically -->
+                </div>
+            </div>
+            
+            <!-- Owners Tab Content -->
+            <div id="owners-tab" class="tab-content hidden">
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden" id="owners-container">
+                    <!-- Owners will be loaded dynamically -->
+                </div>
             </div>
         </main>
 
@@ -324,7 +364,7 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            الاشتراك الشهري (د.ل)
+                            الاشتراك الشهري (د.أ)
                         </label>
                         <input
                             type="number"
@@ -390,7 +430,7 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            المبلغ (د.ل)
+                            المبلغ (د.أ)
                         </label>
                         <input
                             type="number"
@@ -492,7 +532,7 @@
 
     <!-- Receipt Modal -->
     <div id="receipt-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-lg w-full max-w-md receipt-border receipt-print">
+        <div class="bg-white rounded-lg w-full max-w-md receipt-border receipt-print" style="max-width: 500px;">
             <div class="p-6">
                 <!-- Header -->
                 <div class="text-center mb-6">
@@ -513,7 +553,7 @@
                         <h2 class="text-xl font-bold">سند قبض</h2>
                     </div>
                     
-                    <div class="space-y-2">
+                    <div class="space-y-2 text-sm">
                         <div class="flex justify-between">
                             <span class="font-medium">رقم السند:</span>
                             <span id="receipt-number">50</span>
@@ -534,17 +574,20 @@
                             <span class="font-medium">رقم الشقة:</span>
                             <span id="receipt-unit">1</span>
                         </div>
+                        <div class="flex justify-between" id="receipt-months-container">
+                            <!-- Months will be added here if advance payment -->
+                        </div>
                     </div>
                 </div>
                 
                 <!-- Amount Section -->
                 <div class="border-2 border-green-500 rounded-lg p-4 mb-6 text-center">
                     <p class="text-gray-600 mb-2">المبلغ المستلم</p>
-                    <p class="text-green-600 text-3xl font-bold" id="receipt-amount">50 دينار ليبي</p>
+                    <p class="text-green-600 text-3xl font-bold" id="receipt-amount">50 دينار أردني</p>
                 </div>
                 
                 <!-- Footer -->
-                <div class="text-center text-gray-600">
+                <div class="text-center text-gray-600 text-sm">
                     <p class="font-medium mb-2">ملاحظات:</p>
                     <p class="mb-4" id="receipt-notes">قسط التامين السنوي</p>
                     <div class="flex items-center justify-center">
@@ -622,6 +665,11 @@
                 return this.owners.filter(owner => owner.buildingId === this.currentBuildingId);
             }
 
+            deleteOwner(ownerId) {
+                this.owners = this.owners.filter(owner => owner.id !== ownerId);
+                this.saveToStorage('owners', this.owners);
+            }
+
             // Transactions
             addTransaction(transaction) {
                 transaction.id = Date.now();
@@ -632,12 +680,27 @@
                 return transaction;
             }
 
-            getBuildingTransactions() {
-                return this.transactions.filter(t => t.buildingId === this.currentBuildingId);
+            getBuildingTransactions(monthFilter = '') {
+                let transactions = this.transactions.filter(t => t.buildingId === this.currentBuildingId);
+                
+                if (monthFilter) {
+                    transactions = transactions.filter(t => {
+                        const transactionDate = new Date(t.date);
+                        const transactionMonth = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
+                        return transactionMonth === monthFilter;
+                    });
+                }
+                
+                return transactions;
             }
 
-            getBuildingStats() {
-                const buildingTransactions = this.getBuildingTransactions();
+            deleteTransaction(transactionId) {
+                this.transactions = this.transactions.filter(t => t.id !== transactionId);
+                this.saveToStorage('transactions', this.transactions);
+            }
+
+            getBuildingStats(monthFilter = '') {
+                const buildingTransactions = this.getBuildingTransactions(monthFilter);
                 const income = buildingTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + parseFloat(t.amount), 0);
                 const expenses = buildingTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + parseFloat(t.amount), 0);
                 const balance = income - expenses;
@@ -649,6 +712,28 @@
                     expenses: expenses.toFixed(2),
                     transactionCount
                 };
+            }
+
+            getAvailableMonths() {
+                const months = new Set();
+                this.getBuildingTransactions().forEach(transaction => {
+                    const date = new Date(transaction.date);
+                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    const monthName = this.getMonthName(date);
+                    months.add(`${monthKey}|${monthName}`);
+                });
+                return Array.from(months).sort().map(m => {
+                    const [key, name] = m.split('|');
+                    return { key, name };
+                });
+            }
+
+            getMonthName(date) {
+                const months = [
+                    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+                ];
+                return months[date.getMonth()];
             }
         }
 
@@ -676,7 +761,13 @@
         const monthsGrid = document.getElementById('months-grid');
         const statsContainer = document.getElementById('stats-container');
         const transactionsContainer = document.getElementById('transactions-container');
+        const ownersContainer = document.getElementById('owners-container');
         const ownersCount = document.getElementById('owners-count');
+        const tabPayments = document.getElementById('tab-payments');
+        const tabOwners = document.getElementById('tab-owners');
+        const paymentsTab = document.getElementById('payments-tab');
+        const ownersTab = document.getElementById('owners-tab');
+        const monthFilter = document.getElementById('month-filter');
 
         // Initialize App
         function initApp() {
@@ -684,6 +775,7 @@
             loadStats();
             loadTransactions();
             loadOwners();
+            loadMonthFilter();
             setupEventListeners();
             setupMonthsGrid();
             setCurrentDate();
@@ -725,10 +817,42 @@
             });
 
             // Print receipt
-            printReceiptBtn.addEventListener('click', () => window.print());
+            printReceiptBtn.addEventListener('click', () => {
+                const receiptElement = document.querySelector('.receipt-print');
+                const originalDisplay = receiptElement.style.display;
+                receiptElement.style.display = 'block';
+                window.print();
+                receiptElement.style.display = originalDisplay;
+            });
 
             // Share receipt
             shareReceiptBtn.addEventListener('click', shareReceiptViaWhatsApp);
+
+            // Tabs
+            tabPayments.addEventListener('click', () => switchTab('payments'));
+            tabOwners.addEventListener('click', () => switchTab('owners'));
+
+            // Month filter
+            monthFilter.addEventListener('change', handleMonthFilter);
+        }
+
+        function switchTab(tab) {
+            if (tab === 'payments') {
+                tabPayments.classList.add('tab-active');
+                tabPayments.classList.remove('bg-gray-100', 'text-gray-600');
+                tabOwners.classList.remove('tab-active');
+                tabOwners.classList.add('bg-gray-100', 'text-gray-600');
+                paymentsTab.classList.remove('hidden');
+                ownersTab.classList.add('hidden');
+            } else {
+                tabOwners.classList.add('tab-active');
+                tabOwners.classList.remove('bg-gray-100', 'text-gray-600');
+                tabPayments.classList.remove('tab-active');
+                tabPayments.classList.add('bg-gray-100', 'text-gray-600');
+                ownersTab.classList.remove('hidden');
+                paymentsTab.classList.add('hidden');
+                loadOwnersList();
+            }
         }
 
         function setupMonthsGrid() {
@@ -759,6 +883,22 @@
         function setCurrentDate() {
             const now = new Date();
             document.getElementById('payment-date').value = now.toISOString().split('T')[0];
+        }
+
+        function loadMonthFilter() {
+            const months = dataManager.getAvailableMonths();
+            monthFilter.innerHTML = '<option value="">جميع الأشهر</option>';
+            months.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month.key;
+                option.textContent = month.name;
+                monthFilter.appendChild(option);
+            });
+        }
+
+        function handleMonthFilter() {
+            loadStats();
+            loadTransactions();
         }
 
         function loadBuildings() {
@@ -797,6 +937,7 @@
                 loadStats();
                 loadTransactions();
                 loadOwners();
+                loadMonthFilter();
             }
         }
 
@@ -861,6 +1002,7 @@
             addPaymentModal.classList.add('hidden');
             loadStats();
             loadTransactions();
+            loadMonthFilter();
             
             // Show receipt
             showReceipt(newTransaction);
@@ -876,7 +1018,8 @@
         }
 
         function loadStats() {
-            const stats = dataManager.getBuildingStats();
+            const selectedMonth = monthFilter.value;
+            const stats = dataManager.getBuildingStats(selectedMonth);
             const currentBuilding = dataManager.getCurrentBuilding();
             
             statsContainer.innerHTML = `
@@ -884,7 +1027,7 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-gray-600 text-sm">الرصيد الفعلي</p>
-                            <p class="text-blue-600 text-2xl font-bold">${stats.balance} د.ل</p>
+                            <p class="text-blue-600 text-2xl font-bold">${stats.balance} د.أ</p>
                         </div>
                         <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">+5%</span>
                     </div>
@@ -893,7 +1036,7 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-gray-600 text-sm">الواردات</p>
-                            <p class="text-green-600 text-2xl font-bold">${stats.income} د.ل</p>
+                            <p class="text-green-600 text-2xl font-bold">${stats.income} د.أ</p>
                         </div>
                         <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded-full">0%</span>
                     </div>
@@ -902,7 +1045,7 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-gray-600 text-sm">المصروفات</p>
-                            <p class="text-red-600 text-2xl font-bold">${stats.expenses} د.ل</p>
+                            <p class="text-red-600 text-2xl font-bold">${stats.expenses} د.أ</p>
                         </div>
                         <span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">-2%</span>
                     </div>
@@ -920,7 +1063,8 @@
         }
 
         function loadTransactions() {
-            const transactions = dataManager.getBuildingTransactions();
+            const selectedMonth = monthFilter.value;
+            const transactions = dataManager.getBuildingTransactions(selectedMonth);
             const owners = dataManager.getBuildingOwners();
             
             if (transactions.length === 0) {
@@ -949,7 +1093,7 @@
                 const time = new Date(transaction.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
                 
                 return `
-                    <div class="${bgColor} p-4 border-b border-gray-200 fade-in">
+                    <div class="${bgColor} p-4 border-b border-gray-200 fade-in relative">
                         <div class="flex justify-between items-center flex-col md:flex-row gap-4">
                             <div class="flex items-center space-x-4 space-x-reverse">
                                 <input type="checkbox" class="h-4 w-4 text-blue-600 rounded">
@@ -965,17 +1109,25 @@
                                     ${transaction.type === 'income' ? 'واردات' : 'مصروفات'}
                                 </span>
                                 <span class="bg-green-100 text-green-800 px-3 py-1 rounded-lg font-semibold">
-                                    ${transaction.amount} د.ل
+                                    ${transaction.amount} د.أ
                                 </span>
                                 <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm share-btn" data-id="${transaction.id}">
-                                    <i class="fab fa-whatsapp mr-1"></i> مشاركة عبر واتساب
+                                    <i class="fab fa-whatsapp mr-1"></i> مشاركة
                                 </button>
-                                <button class="text-gray-500 hover:text-gray-700">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
+                                <div class="relative">
+                                    <button class="text-gray-500 hover:text-gray-700 dots-btn" data-id="${transaction.id}">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         ${transaction.description ? `<p class="text-sm text-gray-600 mt-2">${transaction.description}</p>` : ''}
+                        ${transaction.advancePayment && transaction.selectedMonths.length > 0 ? `
+                            <p class="text-xs text-blue-600 mt-1">
+                                <i class="fas fa-calendar mr-1"></i>
+                                الأشهر: ${transaction.selectedMonths.join('، ')}
+                            </p>
+                        ` : ''}
                     </div>
                 `;
             }).join('');
@@ -987,11 +1139,149 @@
                     shareTransactionViaWhatsApp(transactionId);
                 });
             });
+
+            // Add event listeners to dots buttons
+            transactionsContainer.querySelectorAll('.dots-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const transactionId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    showTransactionMenu(e.currentTarget, transactionId);
+                });
+            });
+        }
+
+        function showTransactionMenu(button, transactionId) {
+            // Remove any existing menus
+            document.querySelectorAll('.dropdown-menu').forEach(menu => menu.remove());
+            
+            const menu = document.createElement('div');
+            menu.className = 'dropdown-menu';
+            menu.style.top = `${button.offsetTop + button.offsetHeight}px`;
+            menu.style.left = `${button.offsetLeft}px`;
+            
+            menu.innerHTML = `
+                <button class="w-full text-right px-4 py-2 hover:bg-gray-100 text-red-600 delete-transaction" data-id="${transactionId}">
+                    <i class="fas fa-trash mr-2"></i> حذف
+                </button>
+            `;
+            
+            button.parentElement.appendChild(menu);
+            
+            // Add event listener for delete
+            menu.querySelector('.delete-transaction').addEventListener('click', () => {
+                dataManager.deleteTransaction(transactionId);
+                loadStats();
+                loadTransactions();
+                menu.remove();
+            });
+            
+            // Close menu when clicking outside
+            setTimeout(() => {
+                document.addEventListener('click', function closeMenu() {
+                    menu.remove();
+                    document.removeEventListener('click', closeMenu);
+                });
+            }, 100);
         }
 
         function loadOwners() {
             const owners = dataManager.getBuildingOwners();
             ownersCount.textContent = owners.length;
+        }
+
+        function loadOwnersList() {
+            const owners = dataManager.getBuildingOwners();
+            
+            if (owners.length === 0) {
+                ownersContainer.innerHTML = `
+                    <div class="bg-white p-8 text-center">
+                        <i class="fas fa-users text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">لا توجد مالكين مسجلين بعد</p>
+                        <button id="add-first-owner" class="bg-blue-600 text-white px-4 py-2 rounded-lg mt-4 hover:bg-blue-700 transition-colors">
+                            إضافة أول مالك
+                        </button>
+                    </div>
+                `;
+                document.getElementById('add-first-owner').addEventListener('click', () => {
+                    addOwnerModal.classList.remove('hidden');
+                });
+                return;
+            }
+
+            const bgColors = ['bg-blue-50', 'bg-green-50', 'bg-pink-50', 'bg-yellow-50'];
+            
+            ownersContainer.innerHTML = owners.map((owner, index) => {
+                const bgColor = bgColors[index % bgColors.length];
+                return `
+                    <div class="${bgColor} p-4 border-b border-gray-200 fade-in relative">
+                        <div class="flex justify-between items-center flex-col md:flex-row gap-4">
+                            <div class="flex items-center space-x-4 space-x-reverse">
+                                <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                                    ${owner.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="font-semibold text-gray-800">${owner.name}</span>
+                                    <span class="text-sm text-gray-600">شقة ${owner.apartmentNumber} - الطابق ${owner.floor || 'غير محدد'}</span>
+                                    <span class="text-xs text-gray-500">${owner.phone || 'لا يوجد رقم هاتف'}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-4 space-x-reverse flex-wrap justify-center gap-2">
+                                <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-lg font-semibold">
+                                    ${owner.subscription} د.أ
+                                </span>
+                                <div class="relative">
+                                    <button class="text-gray-500 hover:text-gray-700 owner-dots-btn" data-id="${owner.id}">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        ${owner.notes ? `<p class="text-sm text-gray-600 mt-2">${owner.notes}</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            // Add event listeners to dots buttons
+            ownersContainer.querySelectorAll('.owner-dots-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const ownerId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    showOwnerMenu(e.currentTarget, ownerId);
+                });
+            });
+        }
+
+        function showOwnerMenu(button, ownerId) {
+            // Remove any existing menus
+            document.querySelectorAll('.dropdown-menu').forEach(menu => menu.remove());
+            
+            const menu = document.createElement('div');
+            menu.className = 'dropdown-menu';
+            menu.style.top = `${button.offsetTop + button.offsetHeight}px`;
+            menu.style.left = `${button.offsetLeft}px`;
+            
+            menu.innerHTML = `
+                <button class="w-full text-right px-4 py-2 hover:bg-gray-100 text-red-600 delete-owner" data-id="${ownerId}">
+                    <i class="fas fa-trash mr-2"></i> حذف
+                </button>
+            `;
+            
+            button.parentElement.appendChild(menu);
+            
+            // Add event listener for delete
+            menu.querySelector('.delete-owner').addEventListener('click', () => {
+                dataManager.deleteOwner(ownerId);
+                loadOwners();
+                loadOwnersList();
+                menu.remove();
+            });
+            
+            // Close menu when clicking outside
+            setTimeout(() => {
+                document.addEventListener('click', function closeMenu() {
+                    menu.remove();
+                    document.removeEventListener('click', closeMenu);
+                });
+            }, 100);
         }
 
         function showReceipt(transaction) {
@@ -1003,9 +1293,22 @@
             document.getElementById('receipt-description').textContent = transaction.description || 'لا يوجد وصف';
             document.getElementById('receipt-resident').textContent = owner.name;
             document.getElementById('receipt-unit').textContent = owner.apartmentNumber;
-            document.getElementById('receipt-amount').textContent = `${transaction.amount} دينار ليبي`;
+            document.getElementById('receipt-amount').textContent = `${transaction.amount} دينار أردني`;
             document.getElementById('receipt-notes').textContent = transaction.notes || 'لا توجد ملاحظات';
             document.getElementById('receipt-building-name').textContent = currentBuilding.name;
+
+            // Handle advance payment months
+            const monthsContainer = document.getElementById('receipt-months-container');
+            if (transaction.advancePayment && transaction.selectedMonths.length > 0) {
+                monthsContainer.innerHTML = `
+                    <div class="flex justify-between">
+                        <span class="font-medium">الأشهر المدفوعة:</span>
+                        <span>${transaction.selectedMonths.join('، ')}</span>
+                    </div>
+                `;
+            } else {
+                monthsContainer.innerHTML = '';
+            }
 
             receiptModal.classList.remove('hidden');
         }
@@ -1020,6 +1323,10 @@
             const paymentNotes = document.getElementById('receipt-notes').textContent;
             const currentDate = new Date().toLocaleDateString('ar-EG');
             
+            // Check for advance payment months
+            const monthsContainer = document.getElementById('receipt-months-container');
+            const monthsText = monthsContainer.innerHTML ? `\n📅 الأشهر المدفوعة: ${monthsContainer.textContent.split(':')[1]?.trim()}` : '';
+            
             const message = `🏢 *برنامج B Sakan لإدارة مصروفات العمارات*
 شركة B Ventures LLC
 📋 *تفاصيل الدفعة*
@@ -1029,7 +1336,7 @@
 🏬 العمارة: ${buildingName}
 📅 تاريخ الدفع: ${paymentDate}
 💵 المبلغ: ${paymentAmount}
-🗒️ وصف الدفعة: ${paymentDescription}
+🗒️ وصف الدفعة: ${paymentDescription}${monthsText}
 📌 ملاحظات: ${paymentNotes}
 ✅ تم استلام المبلغ بنجاح ${currentDate}
 🤝🏻 شكراً لك لالتزامك`;
@@ -1043,6 +1350,9 @@
             const currentBuilding = dataManager.getCurrentBuilding();
             const currentDate = new Date().toLocaleDateString('ar-EG');
             
+            const monthsText = transaction.advancePayment && transaction.selectedMonths.length > 0 ? 
+                `\n📅 الأشهر المدفوعة: ${transaction.selectedMonths.join('، ')}` : '';
+            
             const message = `🏢 *برنامج B Sakan لإدارة مصروفات العمارات*
 شركة B Ventures LLC
 📋 *تفاصيل الدفعة*
@@ -1051,10 +1361,9 @@
 🏠 رقم الوحدة: ${owner.apartmentNumber}
 🏬 العمارة: ${currentBuilding.name}
 📅 تاريخ الدفع: ${new Date(transaction.date).toLocaleDateString('ar-EG')}
-💵 المبلغ: ${transaction.amount} د.ل
-🗒️ وصف الدفعة: ${transaction.description || 'لا يوجد وصف'}
+💵 المبلغ: ${transaction.amount} د.أ
+🗒️ وصف الدفعة: ${transaction.description || 'لا يوجد وصف'}${monthsText}
 📌 ملاحظات: ${transaction.notes || 'لا توجد ملاحظات'}
-${transaction.advancePayment && transaction.selectedMonths.length > 0 ? `📅 الأشهر المدفوعة: ${transaction.selectedMonths.join('، ')}` : ''}
 ✅ تم استلام المبلغ بنجاح ${currentDate}
 🤝🏻 شكراً لك لالتزامك`;
                 
@@ -1074,4 +1383,4 @@ ${transaction.advancePayment && transaction.selectedMonths.length > 0 ? `📅 ا
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
-</html>
+    </html>
