@@ -1225,297 +1225,315 @@
         }
 
         // Application Initialization
-        class AppManager {
-            constructor(authManager, dataManager) {
-                this.authManager = authManager;
-                this.dataManager = dataManager;
-                this.currentBuildingId = null;
-                this.buildings = [];
-                this.owners = [];
-                this.transactions = [];
+class AppManager {
+    constructor(authManager, dataManager) {
+        this.authManager = authManager;
+        this.dataManager = dataManager;
+        this.currentBuildingId = null;
+        this.buildings = [];
+        this.owners = [];
+        this.transactions = [];
+    }
+
+    async initApp() {
+        try {
+            // Load buildings for the current user
+            await this.loadBuildings();
+            
+            // Set up real-time listeners
+            this.setupRealtimeListeners();
+            
+            // Initialize UI components
+            this.initializeUI();
+            
+            console.log('App initialized successfully');
+        } catch (error) {
+            console.error('Error initializing app:', error);
+        }
+    }
+
+    async loadBuildings() {
+        try {
+            this.buildings = await this.dataManager.getBuildings();
+            this.populateBuildingSelect();
+            
+            // Auto-select first building if available
+            if (this.buildings.length > 0 && !this.currentBuildingId) {
+                this.currentBuildingId = this.buildings[0].id;
+                this.selectBuilding(this.currentBuildingId);
             }
+        } catch (error) {
+            console.error('Error loading buildings:', error);
+        }
+    }
 
-            async initApp() {
-                try {
-                    // Load buildings for the current user
-                    await this.loadBuildings();
-                    
-                    // Set up real-time listeners
-                    this.setupRealtimeListeners();
-                    
-                    // Initialize UI components
-                    this.initializeUI();
-                    
-                    console.log('App initialized successfully');
-                } catch (error) {
-                    console.error('Error initializing app:', error);
-                }
-            }
+    populateBuildingSelect() {
+        buildingSelect.innerHTML = '<option value="">اختر العمارة...</option>';
+        
+        this.buildings.forEach(building => {
+            const option = document.createElement('option');
+            option.value = building.id;
+            option.textContent = building.buildingName || 'Unnamed Building';
+            option.selected = building.id === this.currentBuildingId;
+            buildingSelect.appendChild(option);
+        });
+    }
 
-            async loadBuildings() {
-                try {
-                    this.buildings = await this.dataManager.getBuildings();
-                    this.populateBuildingSelect();
-                    
-                    // Auto-select first building if available
-                    if (this.buildings.length > 0 && !this.currentBuildingId) {
-                        this.currentBuildingId = this.buildings[0].id;
-                        this.selectBuilding(this.currentBuildingId);
-                    }
-                } catch (error) {
-                    console.error('Error loading buildings:', error);
-                }
-            }
+    async selectBuilding(buildingId) {
+        this.currentBuildingId = buildingId;
+        
+        // Update UI
+        const selectedBuilding = this.buildings.find(b => b.id === buildingId);
+        if (selectedBuilding) {
+            document.getElementById('current-building').textContent = selectedBuilding.buildingName;
+        }
+        
+        // Load building-specific data
+        await this.loadBuildingData();
+    }
 
-            populateBuildingSelect() {
-                buildingSelect.innerHTML = '<option value="">اختر العمارة...</option>';
-                
-                this.buildings.forEach(building => {
-                    const option = document.createElement('option');
-                    option.value = building.id;
-                    option.textContent = building.buildingName || 'Unnamed Building';
-                    option.selected = building.id === this.currentBuildingId;
-                    buildingSelect.appendChild(option);
-                });
-            }
+    async loadBuildingData() {
+        if (!this.currentBuildingId) return;
+        
+        try {
+            // Load owners and transactions for the current building
+            this.owners = await this.dataManager.getOwners(this.currentBuildingId);
+            this.transactions = await this.dataManager.getTransactions(this.currentBuildingId);
+            
+            this.updateOwnersUI();
+            this.updateTransactionsUI();
+            this.updateStatsUI();
+            
+            // Ensure payment owner dropdown is updated
+            this.updatePaymentOwnerSelect();
+        } catch (error) {
+            console.error('Error loading building data:', error);
+        }
+    }
 
-            async selectBuilding(buildingId) {
-                this.currentBuildingId = buildingId;
-                
-                // Update UI
-                const selectedBuilding = this.buildings.find(b => b.id === buildingId);
-                if (selectedBuilding) {
-                    document.getElementById('current-building').textContent = selectedBuilding.buildingName;
-                }
-                
-                // Load building-specific data
-                await this.loadBuildingData();
-            }
+    setupRealtimeListeners() {
+        // Listen for buildings changes
+        this.dataManager.onBuildingsChange((buildings) => {
+            this.buildings = buildings;
+            this.populateBuildingSelect();
+        });
 
-            async loadBuildingData() {
-                if (!this.currentBuildingId) return;
-                
-                try {
-                    // Load owners and transactions for the current building
-                    this.owners = await this.dataManager.getOwners(this.currentBuildingId);
-                    this.transactions = await this.dataManager.getTransactions(this.currentBuildingId);
-                    
-                    this.updateOwnersUI();
-                    this.updateTransactionsUI();
-                    this.updateStatsUI();
-                } catch (error) {
-                    console.error('Error loading building data:', error);
-                }
-            }
+        // Listen for owners changes
+        if (this.currentBuildingId) {
+            this.dataManager.onOwnersChange(this.currentBuildingId, (owners) => {
+                this.owners = owners;
+                this.updateOwnersUI();
+                this.updatePaymentOwnerSelect();
+            });
 
-            setupRealtimeListeners() {
-                // Listen for buildings changes
-                this.dataManager.onBuildingsChange((buildings) => {
-                    this.buildings = buildings;
-                    this.populateBuildingSelect();
-                });
-
-                // Listen for owners changes
-                if (this.currentBuildingId) {
-                    this.dataManager.onOwnersChange(this.currentBuildingId, (owners) => {
-                        this.owners = owners;
-                        this.updateOwnersUI();
-                    });
-
-                    // Listen for transactions changes
-                    this.dataManager.onTransactionsChange(this.currentBuildingId, (transactions) => {
-                        this.transactions = transactions;
-                        this.updateTransactionsUI();
-                        this.updateStatsUI();
-                    });
-                }
-            }
-
-            initializeUI() {
-                // Set current date for payment form
-                document.getElementById('payment-date').valueAsDate = new Date();
-                
-                // Initialize months grid for advance payments
-                this.initializeMonthsGrid();
-                
-                // Update user interface
+            // Listen for transactions changes
+            this.dataManager.onTransactionsChange(this.currentBuildingId, (transactions) => {
+                this.transactions = transactions;
+                this.updateTransactionsUI();
                 this.updateStatsUI();
-            }
+            });
+        }
+    }
 
-            initializeMonthsGrid() {
-                const months = [
-                    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-                    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
-                ];
-                
-                monthsGrid.innerHTML = '';
-                months.forEach((month, index) => {
-                    const checkbox = document.createElement('div');
-                    checkbox.className = 'flex items-center space-x-2 space-x-reverse';
-                    checkbox.innerHTML = `
-                        <input type="checkbox" id="month-${index}" value="${index}" class="h-4 w-4 text-blue-600 rounded">
-                        <label for="month-${index}" class="text-sm text-gray-700">${month}</label>
-                    `;
-                    monthsGrid.appendChild(checkbox);
-                });
-            }
+    initializeUI() {
+        // Set current date for payment form
+        document.getElementById('payment-date').valueAsDate = new Date();
+        
+        // Initialize months grid for advance payments
+        this.initializeMonthsGrid();
+        
+        // Update user interface
+        this.updateStatsUI();
+    }
 
-            updateStatsUI() {
-                // Calculate statistics
-                const totalIncome = this.transactions
-                    .filter(t => t.type === 'income')
-                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-                    
-                const totalExpenses = this.transactions
-                    .filter(t => t.type === 'expense')
-                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-                    
-                const balance = totalIncome - totalExpenses;
-                const ownersCount = this.owners.length;
+    initializeMonthsGrid() {
+        const months = [
+            'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+            'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+        ];
+        
+        monthsGrid.innerHTML = '';
+        months.forEach((month, index) => {
+            const checkbox = document.createElement('div');
+            checkbox.className = 'flex items-center space-x-2 space-x-reverse';
+            checkbox.innerHTML = `
+                <input type="checkbox" id="month-${index}" value="${index}" class="h-4 w-4 text-blue-600 rounded">
+                <label for="month-${index}" class="text-sm text-gray-700">${month}</label>
+            `;
+            monthsGrid.appendChild(checkbox);
+        });
+    }
 
-                // Update stats container
-                statsContainer.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-green-500">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">إجمالي الواردات</p>
-                                <p class="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)} د.أ</p>
-                            </div>
-                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-money-bill-wave text-green-600 text-xl"></i>
-                            </div>
-                        </div>
+    updatePaymentOwnerSelect() {
+        const paymentOwnerSelect = document.getElementById('payment-owner-select');
+        paymentOwnerSelect.innerHTML = '<option value="">اختر مالك الشقة</option>';
+        
+        this.owners.forEach(owner => {
+            const option = document.createElement('option');
+            option.value = owner.name;
+            option.textContent = `${owner.name} - شقة ${owner.apartmentNumber || 'N/A'}`;
+            paymentOwnerSelect.appendChild(option);
+        });
+    }
+
+    updateStatsUI() {
+        // Calculate statistics
+        const totalIncome = this.transactions
+            .filter(t => t.type === 'income')
+            .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+            
+        const totalExpenses = this.transactions
+            .filter(t => t.type === 'expense')
+            .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+            
+        const balance = totalIncome - totalExpenses;
+        const ownersCount = this.owners.length;
+
+        // Update stats container
+        statsContainer.innerHTML = `
+            <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-green-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">إجمالي الواردات</p>
+                        <p class="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)} د.أ</p>
                     </div>
-                    
-                    <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-red-500">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">إجمالي المصروفات</p>
-                                <p class="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)} د.أ</p>
-                            </div>
-                            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-receipt text-red-600 text-xl"></i>
-                            </div>
-                        </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-money-bill-wave text-green-600 text-xl"></i>
                     </div>
-                    
-                    <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-blue-500">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">صافي الرصيد</p>
-                                <p class="text-2xl font-bold ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}">
-                                    ${balance.toFixed(2)} د.أ
-                                </p>
-                            </div>
-                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-balance-scale text-blue-600 text-xl"></i>
-                            </div>
-                        </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-red-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">إجمالي المصروفات</p>
+                        <p class="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)} د.أ</p>
                     </div>
-                    
-                    <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-purple-500">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">عدد المالكين</p>
-                                <p class="text-2xl font-bold text-purple-600">${ownersCount}</p>
-                            </div>
-                            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-users text-purple-600 text-xl"></i>
-                            </div>
-                        </div>
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-receipt text-red-600 text-xl"></i>
                     </div>
-                `;
-            }
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-blue-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">صافي الرصيد</p>
+                        <p class="text-2xl font-bold ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}">
+                            ${balance.toFixed(2)} د.أ
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-balance-scale text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-purple-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">عدد المالكين</p>
+                        <p class="text-2xl font-bold text-purple-600">${ownersCount}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-users text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 
-            updateOwnersUI() {
-                ownersCount.textContent = this.owners.length;
-                
-                if (this.owners.length === 0) {
-                    ownersContainer.innerHTML = `
-                        <div class="text-center py-12">
-                            <i class="fas fa-users text-gray-300 text-6xl mb-4"></i>
-                            <p class="text-gray-500 text-lg">لا يوجد مالكين مسجلين</p>
-                            <p class="text-gray-400 text-sm mt-2">إضغط على "إضافة مالك" لبدء التسجيل</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                ownersContainer.innerHTML = this.owners.map(owner => `
-                    <div class="border-b border-gray-200 last:border-b-0">
-                        <div class="p-4 hover:bg-gray-50 transition-colors">
-                            <div class="flex justify-between items-start">
-                                <div class="flex items-center space-x-3 space-x-reverse">
-                                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold">
-                                        ${owner.name ? owner.name.charAt(0) : 'M'}
-                                    </div>
-                                    <div>
-                                        <h3 class="font-semibold text-gray-800">${owner.name || 'غير معروف'}</h3>
-                                        <p class="text-sm text-gray-600">شقة ${owner.apartmentNumber || 'N/A'} - ${owner.floor || 'N/A'}</p>
-                                        ${owner.phone ? `<p class="text-sm text-gray-500">${owner.phone}</p>` : ''}
-                                    </div>
-                                </div>
-                                <div class="text-left">
-                                    <p class="text-green-600 font-semibold">${owner.subscription || 100} د.أ</p>
-                                    <p class="text-xs text-gray-500">اشتراك شهري</p>
-                                </div>
-                            </div>
-                            ${owner.notes ? `<p class="text-sm text-gray-600 mt-2">${owner.notes}</p>` : ''}
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            updateTransactionsUI() {
-                if (this.transactions.length === 0) {
-                    transactionsContainer.innerHTML = `
-                        <div class="text-center py-12">
-                            <i class="fas fa-receipt text-gray-300 text-6xl mb-4"></i>
-                            <p class="text-gray-500 text-lg">لا توجد معاملات مسجلة</p>
-                            <p class="text-gray-400 text-sm mt-2">إضغط على "إضافة دفعة" لتسجيل أول معاملة</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                transactionsContainer.innerHTML = this.transactions.map(transaction => `
-                    <div class="border-b border-gray-200 last:border-b-0">
-                        <div class="p-4 hover:bg-gray-50 transition-colors">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <div class="flex items-center space-x-2 space-x-reverse mb-1">
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                            transaction.type === 'income' 
-                                                ? 'bg-green-100 text-green-800' 
-                                                : 'bg-red-100 text-red-800'
-                                        }">
-                                            <i class="fas ${
-                                                transaction.type === 'income' ? 'fa-arrow-down' : 'fa-arrow-up'
-                                            } mr-1"></i>
-                                            ${transaction.type === 'income' ? 'واردات' : 'مصروفات'}
-                                        </span>
-                                        <span class="text-xs text-gray-500">
-                                            ${new Date(transaction.date).toLocaleDateString('ar-EG')}
-                                        </span>
-                                    </div>
-                                    <h3 class="font-medium text-gray-800">${transaction.description || 'لا يوجد وصف'}</h3>
-                                    <p class="text-sm text-gray-600">${transaction.owner || 'عام'}</p>
-                                    ${transaction.notes ? `<p class="text-sm text-gray-500 mt-1">${transaction.notes}</p>` : ''}
-                                </div>
-                                <div class="text-left ml-4">
-                                    <p class="text-lg font-semibold ${
-                                        transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                                    }">
-                                        ${transaction.type === 'income' ? '+' : '-'}${parseFloat(transaction.amount || 0).toFixed(2)} د.أ
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-            }
+    updateOwnersUI() {
+        ownersCount.textContent = this.owners.length;
+        
+        // Update payment owner dropdown
+        this.updatePaymentOwnerSelect();
+        
+        if (this.owners.length === 0) {
+            ownersContainer.innerHTML = `
+                <div class="text-center py-12">
+                    <i class="fas fa-users text-gray-300 text-6xl mb-4"></i>
+                    <p class="text-gray-500 text-lg">لا يوجد مالكين مسجلين</p>
+                    <p class="text-gray-400 text-sm mt-2">إضغط على "إضافة مالك" لبدء التسجيل</p>
+                </div>
+            `;
+            return;
         }
 
+        ownersContainer.innerHTML = this.owners.map(owner => `
+            <div class="border-b border-gray-200 last:border-b-0">
+                <div class="p-4 hover:bg-gray-50 transition-colors">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold">
+                                ${owner.name ? owner.name.charAt(0) : 'M'}
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">${owner.name || 'غير معروف'}</h3>
+                                <p class="text-sm text-gray-600">شقة ${owner.apartmentNumber || 'N/A'} - ${owner.floor || 'N/A'}</p>
+                                ${owner.phone ? `<p class="text-sm text-gray-500">${owner.phone}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-green-600 font-semibold">${owner.subscription || 100} د.أ</p>
+                            <p class="text-xs text-gray-500">اشتراك شهري</p>
+                        </div>
+                    </div>
+                    ${owner.notes ? `<p class="text-sm text-gray-600 mt-2">${owner.notes}</p>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    updateTransactionsUI() {
+        if (this.transactions.length === 0) {
+            transactionsContainer.innerHTML = `
+                <div class="text-center py-12">
+                    <i class="fas fa-receipt text-gray-300 text-6xl mb-4"></i>
+                    <p class="text-gray-500 text-lg">لا توجد معاملات مسجلة</p>
+                    <p class="text-gray-400 text-sm mt-2">إضغط على "إضافة دفعة" لتسجيل أول معاملة</p>
+                </div>
+            `;
+            return;
+        }
+
+        transactionsContainer.innerHTML = this.transactions.map(transaction => `
+            <div class="border-b border-gray-200 last:border-b-0">
+                <div class="p-4 hover:bg-gray-50 transition-colors">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 space-x-reverse mb-1">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                    transaction.type === 'income' 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : 'bg-red-100 text-red-800'
+                                }">
+                                    <i class="fas ${
+                                        transaction.type === 'income' ? 'fa-arrow-down' : 'fa-arrow-up'
+                                    } mr-1"></i>
+                                    ${transaction.type === 'income' ? 'واردات' : 'مصروفات'}
+                                </span>
+                                <span class="text-xs text-gray-500">
+                                    ${new Date(transaction.date).toLocaleDateString('ar-EG')}
+                                </span>
+                            </div>
+                            <h3 class="font-medium text-gray-800">${transaction.description || 'لا يوجد وصف'}</h3>
+                            <p class="text-sm text-gray-600">${transaction.owner || 'عام'}</p>
+                            ${transaction.notes ? `<p class="text-sm text-gray-500 mt-1">${transaction.notes}</p>` : ''}
+                        </div>
+                        <div class="text-left ml-4">
+                            <p class="text-lg font-semibold ${
+                                transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                            }">
+                                ${transaction.type === 'income' ? '+' : '-'}${parseFloat(transaction.amount || 0).toFixed(2)} د.أ
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+}
         // Initialize Managers
         const authManager = new FirebaseAuthManager();
         const dataManager = new FirebaseDataManager(authManager);
