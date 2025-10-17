@@ -138,6 +138,74 @@
             z-index: 1000;
             display: none;
         }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th, .table td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .table th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .table tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            margin: 2px;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .status-late {
+            background-color: #fef2f2;
+            color: #dc2626;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .status-paid {
+            background-color: #f0fdf4;
+            color: #16a34a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .filter-section {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            align-items: end;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -414,29 +482,114 @@
                             المالكين (<span id="owners-count">0</span>)
                         </button>
                     </div>
-                    
-                    <div class="flex space-x-2 space-x-reverse w-full md:w-auto justify-center">
-                        <select id="month-filter" class="bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">جميع الأشهر</option>
-                        </select>
-                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                            تصفية الحساب الشهري
-                        </button>
-                    </div>
                 </div>
             </div>
             
             <!-- Payments Tab Content -->
             <div id="payments-tab" class="tab-content">
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden" id="transactions-container">
-                    <!-- Transactions will be loaded dynamically -->
+                <!-- Transactions Filters -->
+                <div class="filter-section">
+                    <h3 class="text-lg font-semibold mb-4">تصفية المعاملات</h3>
+                    <div class="filter-grid">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">الشهر</label>
+                            <select id="month-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">جميع الأشهر</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">المالك</label>
+                            <select id="owner-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">جميع المالكين</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">نوع المعاملة</label>
+                            <select id="type-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">جميع الأنواع</option>
+                                <option value="income">واردات</option>
+                                <option value="expense">مصروفات</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">التصنيف</label>
+                            <select id="category-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">جميع التصنيفات</option>
+                                <option value="rent">إيجار</option>
+                                <option value="maintenance">صيانة</option>
+                                <option value="utilities">مرافق</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">من تاريخ</label>
+                            <input type="date" id="date-from" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">إلى تاريخ</label>
+                            <input type="date" id="date-to" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <button id="apply-filters" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                تطبيق التصفية
+                            </button>
+                        </div>
+                        <div>
+                            <button id="reset-filters" class="w-full bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors">
+                                إعادة تعيين
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transactions Table -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="table-container">
+                        <table class="table" id="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>نوع المعاملة</th>
+                                    <th>المالك</th>
+                                    <th>الوصف</th>
+                                    <th>المبلغ (د.أ)</th>
+                                    <th>التصنيف</th>
+                                    <th>الملاحظات</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-container">
+                                <!-- Transactions will be loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             
             <!-- Owners Tab Content -->
             <div id="owners-tab" class="tab-content hidden">
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden" id="owners-container">
-                    <!-- Owners will be loaded dynamically -->
+                <!-- Owners Table -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="table-container">
+                        <table class="table" id="owners-table">
+                            <thead>
+                                <tr>
+                                    <th>اسم المالك</th>
+                                    <th>رقم الشقة</th>
+                                    <th>رقم الهاتف</th>
+                                    <th>الاشتراك الشهري</th>
+                                    <th>المبلغ المطلوب</th>
+                                    <th>المبلغ المدفوع</th>
+                                    <th>الأشهر المتأخرة</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="owners-container">
+                                <!-- Owners will be loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
@@ -748,6 +901,21 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             id="payment-date"
                         />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            تصنيف الدفعة
+                        </label>
+                        <select
+                            name="category"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="rent">إيجار</option>
+                            <option value="maintenance">صيانة</option>
+                            <option value="utilities">مرافق</option>
+                            <option value="other">أخرى</option>
+                        </select>
                     </div>
                     
                     <div class="flex items-center space-x-2 space-x-reverse">
@@ -1225,284 +1393,428 @@
         }
 
         // Application Initialization
-class AppManager {
-    constructor(authManager, dataManager) {
-        this.authManager = authManager;
-        this.dataManager = dataManager;
-        this.currentBuildingId = null;
-        this.buildings = [];
-        this.owners = [];
-        this.transactions = [];
-    }
-
-    async initApp() {
-        try {
-            // Load buildings for the current user
-            await this.loadBuildings();
-            
-            // Set up real-time listeners
-            this.setupRealtimeListeners();
-            
-            // Initialize UI components
-            this.initializeUI();
-            
-            console.log('App initialized successfully');
-        } catch (error) {
-            console.error('Error initializing app:', error);
-        }
-    }
-
-    async loadBuildings() {
-        try {
-            this.buildings = await this.dataManager.getBuildings();
-            this.populateBuildingSelect();
-            
-            // Auto-select first building if available
-            if (this.buildings.length > 0 && !this.currentBuildingId) {
-                this.currentBuildingId = this.buildings[0].id;
-                this.selectBuilding(this.currentBuildingId);
+        class AppManager {
+            constructor(authManager, dataManager) {
+                this.authManager = authManager;
+                this.dataManager = dataManager;
+                this.currentBuildingId = null;
+                this.buildings = [];
+                this.owners = [];
+                this.transactions = [];
+                this.filteredTransactions = [];
+                this.currentFilters = {};
             }
-        } catch (error) {
-            console.error('Error loading buildings:', error);
-        }
-    }
 
-    populateBuildingSelect() {
-        buildingSelect.innerHTML = '<option value="">اختر العمارة...</option>';
-        
-        this.buildings.forEach(building => {
-            const option = document.createElement('option');
-            option.value = building.id;
-            option.textContent = building.buildingName || 'Unnamed Building';
-            option.selected = building.id === this.currentBuildingId;
-            buildingSelect.appendChild(option);
-        });
-    }
+            async initApp() {
+                try {
+                    // Load buildings for the current user
+                    await this.loadBuildings();
+                    
+                    // Set up real-time listeners
+                    this.setupRealtimeListeners();
+                    
+                    // Initialize UI components
+                    this.initializeUI();
+                    
+                    console.log('App initialized successfully');
+                } catch (error) {
+                    console.error('Error initializing app:', error);
+                }
+            }
 
-    async selectBuilding(buildingId) {
-        this.currentBuildingId = buildingId;
-        
-        // Update UI
-        const selectedBuilding = this.buildings.find(b => b.id === buildingId);
-        if (selectedBuilding) {
-            document.getElementById('current-building').textContent = selectedBuilding.buildingName;
-        }
-        
-        // Load building-specific data
-        await this.loadBuildingData();
-    }
+            async loadBuildings() {
+                try {
+                    this.buildings = await this.dataManager.getBuildings();
+                    this.populateBuildingSelect();
+                    
+                    // Auto-select first building if available
+                    if (this.buildings.length > 0 && !this.currentBuildingId) {
+                        this.currentBuildingId = this.buildings[0].id;
+                        this.selectBuilding(this.currentBuildingId);
+                    }
+                } catch (error) {
+                    console.error('Error loading buildings:', error);
+                }
+            }
 
-    async loadBuildingData() {
-        if (!this.currentBuildingId) return;
-        
-        try {
-            // Load owners and transactions for the current building
-            this.owners = await this.dataManager.getOwners(this.currentBuildingId);
-            this.transactions = await this.dataManager.getTransactions(this.currentBuildingId);
-            
-            this.updateOwnersUI();
-            this.updateTransactionsUI();
-            this.updateStatsUI();
-            
-            // Ensure payment owner dropdown is updated
-            this.updatePaymentOwnerSelect();
-        } catch (error) {
-            console.error('Error loading building data:', error);
-        }
-    }
+            populateBuildingSelect() {
+                buildingSelect.innerHTML = '<option value="">اختر العمارة...</option>';
+                
+                this.buildings.forEach(building => {
+                    const option = document.createElement('option');
+                    option.value = building.id;
+                    option.textContent = building.buildingName || 'Unnamed Building';
+                    option.selected = building.id === this.currentBuildingId;
+                    buildingSelect.appendChild(option);
+                });
+            }
 
-    setupRealtimeListeners() {
-        // Listen for buildings changes
-        this.dataManager.onBuildingsChange((buildings) => {
-            this.buildings = buildings;
-            this.populateBuildingSelect();
-        });
+            async selectBuilding(buildingId) {
+                this.currentBuildingId = buildingId;
+                
+                // Update UI
+                const selectedBuilding = this.buildings.find(b => b.id === buildingId);
+                if (selectedBuilding) {
+                    document.getElementById('current-building').textContent = selectedBuilding.buildingName;
+                }
+                
+                // Load building-specific data
+                await this.loadBuildingData();
+            }
 
-        // Listen for owners changes
-        if (this.currentBuildingId) {
-            this.dataManager.onOwnersChange(this.currentBuildingId, (owners) => {
-                this.owners = owners;
-                this.updateOwnersUI();
-                this.updatePaymentOwnerSelect();
-            });
+            async loadBuildingData() {
+                if (!this.currentBuildingId) return;
+                
+                try {
+                    // Load owners and transactions for the current building
+                    this.owners = await this.dataManager.getOwners(this.currentBuildingId);
+                    this.transactions = await this.dataManager.getTransactions(this.currentBuildingId);
+                    this.filteredTransactions = [...this.transactions];
+                    
+                    this.updateOwnersUI();
+                    this.updateTransactionsUI();
+                    this.updateStatsUI();
+                    
+                    // Ensure payment owner dropdown is updated
+                    this.updatePaymentOwnerSelect();
+                    this.updateFilterDropdowns();
+                } catch (error) {
+                    console.error('Error loading building data:', error);
+                }
+            }
 
-            // Listen for transactions changes
-            this.dataManager.onTransactionsChange(this.currentBuildingId, (transactions) => {
-                this.transactions = transactions;
-                this.updateTransactionsUI();
+            setupRealtimeListeners() {
+                // Listen for buildings changes
+                this.dataManager.onBuildingsChange((buildings) => {
+                    this.buildings = buildings;
+                    this.populateBuildingSelect();
+                });
+
+                // Listen for owners changes
+                if (this.currentBuildingId) {
+                    this.dataManager.onOwnersChange(this.currentBuildingId, (owners) => {
+                        this.owners = owners;
+                        this.updateOwnersUI();
+                        this.updatePaymentOwnerSelect();
+                        this.updateFilterDropdowns();
+                    });
+
+                    // Listen for transactions changes
+                    this.dataManager.onTransactionsChange(this.currentBuildingId, (transactions) => {
+                        this.transactions = transactions;
+                        this.applyFilters();
+                        this.updateTransactionsUI();
+                        this.updateStatsUI();
+                    });
+                }
+            }
+
+            initializeUI() {
+                // Set current date for payment form
+                document.getElementById('payment-date').valueAsDate = new Date();
+                
+                // Initialize months grid for advance payments
+                this.initializeMonthsGrid();
+                
+                // Update user interface
                 this.updateStatsUI();
-            });
-        }
-    }
+                
+                // Initialize filter event listeners
+                this.initializeFilters();
+            }
 
-    initializeUI() {
-        // Set current date for payment form
-        document.getElementById('payment-date').valueAsDate = new Date();
-        
-        // Initialize months grid for advance payments
-        this.initializeMonthsGrid();
-        
-        // Update user interface
-        this.updateStatsUI();
-    }
+            initializeFilters() {
+                document.getElementById('apply-filters').addEventListener('click', () => {
+                    this.applyFilters();
+                });
 
-    initializeMonthsGrid() {
-        const months = [
-            'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-            'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
-        ];
-        
-        monthsGrid.innerHTML = '';
-        months.forEach((month, index) => {
-            const checkbox = document.createElement('div');
-            checkbox.className = 'flex items-center space-x-2 space-x-reverse';
-            checkbox.innerHTML = `
-                <input type="checkbox" id="month-${index}" value="${index}" class="h-4 w-4 text-blue-600 rounded">
-                <label for="month-${index}" class="text-sm text-gray-700">${month}</label>
-            `;
-            monthsGrid.appendChild(checkbox);
-        });
-    }
+                document.getElementById('reset-filters').addEventListener('click', () => {
+                    this.resetFilters();
+                });
+            }
 
-    updatePaymentOwnerSelect() {
-        const paymentOwnerSelect = document.getElementById('payment-owner-select');
-        paymentOwnerSelect.innerHTML = '<option value="">اختر مالك الشقة</option>';
-        
-        this.owners.forEach(owner => {
-            const option = document.createElement('option');
-            option.value = owner.name;
-            option.textContent = `${owner.name} - شقة ${owner.apartmentNumber || 'N/A'}`;
-            paymentOwnerSelect.appendChild(option);
-        });
-    }
+            applyFilters() {
+                this.currentFilters = {
+                    month: document.getElementById('month-filter').value,
+                    owner: document.getElementById('owner-filter').value,
+                    type: document.getElementById('type-filter').value,
+                    category: document.getElementById('category-filter').value,
+                    dateFrom: document.getElementById('date-from').value,
+                    dateTo: document.getElementById('date-to').value
+                };
 
-    updateStatsUI() {
-        // Calculate statistics
-        const totalIncome = this.transactions
-            .filter(t => t.type === 'income')
-            .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-            
-        const totalExpenses = this.transactions
-            .filter(t => t.type === 'expense')
-            .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-            
-        const balance = totalIncome - totalExpenses;
-        const ownersCount = this.owners.length;
+                this.filteredTransactions = this.transactions.filter(transaction => {
+                    let matches = true;
 
-        // Update stats container
-        statsContainer.innerHTML = `
-            <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-green-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-600 text-sm">إجمالي الواردات</p>
-                        <p class="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)} د.أ</p>
-                    </div>
-                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-money-bill-wave text-green-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-red-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-600 text-sm">إجمالي المصروفات</p>
-                        <p class="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)} د.أ</p>
-                    </div>
-                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-receipt text-red-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-blue-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-600 text-sm">صافي الرصيد</p>
-                        <p class="text-2xl font-bold ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}">
-                            ${balance.toFixed(2)} د.أ
-                        </p>
-                    </div>
-                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-balance-scale text-blue-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-purple-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-600 text-sm">عدد المالكين</p>
-                        <p class="text-2xl font-bold text-purple-600">${ownersCount}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-users text-purple-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
+                    // Month filter
+                    if (this.currentFilters.month) {
+                        const transactionDate = new Date(transaction.date);
+                        const transactionMonth = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
+                        matches = matches && transactionMonth === this.currentFilters.month;
+                    }
 
-    updateOwnersUI() {
-        ownersCount.textContent = this.owners.length;
-        
-        // Update payment owner dropdown
-        this.updatePaymentOwnerSelect();
-        
-        if (this.owners.length === 0) {
-            ownersContainer.innerHTML = `
-                <div class="text-center py-12">
-                    <i class="fas fa-users text-gray-300 text-6xl mb-4"></i>
-                    <p class="text-gray-500 text-lg">لا يوجد مالكين مسجلين</p>
-                    <p class="text-gray-400 text-sm mt-2">إضغط على "إضافة مالك" لبدء التسجيل</p>
-                </div>
-            `;
-            return;
-        }
+                    // Owner filter
+                    if (this.currentFilters.owner) {
+                        matches = matches && transaction.owner === this.currentFilters.owner;
+                    }
 
-        ownersContainer.innerHTML = this.owners.map(owner => `
-            <div class="border-b border-gray-200 last:border-b-0">
-                <div class="p-4 hover:bg-gray-50 transition-colors">
-                    <div class="flex justify-between items-start">
-                        <div class="flex items-center space-x-3 space-x-reverse">
-                            <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold">
-                                ${owner.name ? owner.name.charAt(0) : 'M'}
-                            </div>
+                    // Type filter
+                    if (this.currentFilters.type) {
+                        matches = matches && transaction.type === this.currentFilters.type;
+                    }
+
+                    // Category filter
+                    if (this.currentFilters.category) {
+                        matches = matches && transaction.category === this.currentFilters.category;
+                    }
+
+                    // Date range filter
+                    if (this.currentFilters.dateFrom) {
+                        matches = matches && new Date(transaction.date) >= new Date(this.currentFilters.dateFrom);
+                    }
+
+                    if (this.currentFilters.dateTo) {
+                        matches = matches && new Date(transaction.date) <= new Date(this.currentFilters.dateTo);
+                    }
+
+                    return matches;
+                });
+
+                this.updateTransactionsUI();
+            }
+
+            resetFilters() {
+                document.getElementById('month-filter').value = '';
+                document.getElementById('owner-filter').value = '';
+                document.getElementById('type-filter').value = '';
+                document.getElementById('category-filter').value = '';
+                document.getElementById('date-from').value = '';
+                document.getElementById('date-to').value = '';
+                
+                this.currentFilters = {};
+                this.filteredTransactions = [...this.transactions];
+                this.updateTransactionsUI();
+            }
+
+            updateFilterDropdowns() {
+                // Update owner filter dropdown
+                const ownerFilter = document.getElementById('owner-filter');
+                ownerFilter.innerHTML = '<option value="">جميع المالكين</option>';
+                this.owners.forEach(owner => {
+                    const option = document.createElement('option');
+                    option.value = owner.name;
+                    option.textContent = owner.name;
+                    ownerFilter.appendChild(option);
+                });
+
+                // Update month filter dropdown
+                const monthFilter = document.getElementById('month-filter');
+                monthFilter.innerHTML = '<option value="">جميع الأشهر</option>';
+                
+                const months = new Set();
+                this.transactions.forEach(transaction => {
+                    const date = new Date(transaction.date);
+                    const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    months.add(month);
+                });
+
+                Array.from(months).sort().reverse().forEach(month => {
+                    const option = document.createElement('option');
+                    option.value = month;
+                    const [year, monthNum] = month.split('-');
+                    const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+                    option.textContent = `${monthNames[parseInt(monthNum) - 1]} ${year}`;
+                    monthFilter.appendChild(option);
+                });
+            }
+
+            initializeMonthsGrid() {
+                const months = [
+                    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+                ];
+                
+                monthsGrid.innerHTML = '';
+                months.forEach((month, index) => {
+                    const checkbox = document.createElement('div');
+                    checkbox.className = 'flex items-center space-x-2 space-x-reverse';
+                    checkbox.innerHTML = `
+                        <input type="checkbox" id="month-${index}" value="${index}" class="h-4 w-4 text-blue-600 rounded">
+                        <label for="month-${index}" class="text-sm text-gray-700">${month}</label>
+                    `;
+                    monthsGrid.appendChild(checkbox);
+                });
+            }
+
+            updatePaymentOwnerSelect() {
+                const paymentOwnerSelect = document.getElementById('payment-owner-select');
+                paymentOwnerSelect.innerHTML = '<option value="">اختر مالك الشقة</option>';
+                
+                this.owners.forEach(owner => {
+                    const option = document.createElement('option');
+                    option.value = owner.name;
+                    option.textContent = `${owner.name} - شقة ${owner.apartmentNumber || 'N/A'}`;
+                    paymentOwnerSelect.appendChild(option);
+                });
+            }
+
+            updateStatsUI() {
+                // Calculate statistics
+                const totalIncome = this.transactions
+                    .filter(t => t.type === 'income')
+                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+                    
+                const totalExpenses = this.transactions
+                    .filter(t => t.type === 'expense')
+                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+                    
+                const balance = totalIncome - totalExpenses;
+                const ownersCount = this.owners.length;
+
+                // Update stats container
+                statsContainer.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-green-500">
+                        <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="font-semibold text-gray-800">${owner.name || 'غير معروف'}</h3>
-                                <p class="text-sm text-gray-600">شقة ${owner.apartmentNumber || 'N/A'} - ${owner.floor || 'N/A'}</p>
-                                ${owner.phone ? `<p class="text-sm text-gray-500">${owner.phone}</p>` : ''}
+                                <p class="text-gray-600 text-sm">إجمالي الواردات</p>
+                                <p class="text-2xl font-bold text-green-600">${totalIncome.toFixed(2)} د.أ</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-money-bill-wave text-green-600 text-xl"></i>
                             </div>
                         </div>
-                        <div class="text-left">
-                            <p class="text-green-600 font-semibold">${owner.subscription || 100} د.أ</p>
-                            <p class="text-xs text-gray-500">اشتراك شهري</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-red-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">إجمالي المصروفات</p>
+                                <p class="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)} د.أ</p>
+                            </div>
+                            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-receipt text-red-600 text-xl"></i>
+                            </div>
                         </div>
                     </div>
-                    ${owner.notes ? `<p class="text-sm text-gray-600 mt-2">${owner.notes}</p>` : ''}
-                </div>
-            </div>
-        `).join('');
-    }
+                    
+                    <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-blue-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">صافي الرصيد</p>
+                                <p class="text-2xl font-bold ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}">
+                                    ${balance.toFixed(2)} د.أ
+                                </p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-balance-scale text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-sm p-6 border-r-4 border-purple-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-600 text-sm">عدد المالكين</p>
+                                <p class="text-2xl font-bold text-purple-600">${ownersCount}</p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-users text-purple-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
 
-    updateTransactionsUI() {
-        if (this.transactions.length === 0) {
-            transactionsContainer.innerHTML = `
-                <div class="text-center py-12">
-                    <i class="fas fa-receipt text-gray-300 text-6xl mb-4"></i>
-                    <p class="text-gray-500 text-lg">لا توجد معاملات مسجلة</p>
-                    <p class="text-gray-400 text-sm mt-2">إضغط على "إضافة دفعة" لتسجيل أول معاملة</p>
-                </div>
-            `;
-            return;
-        }
+            updateOwnersUI() {
+                ownersCount.textContent = this.owners.length;
+                
+                if (this.owners.length === 0) {
+                    ownersContainer.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="text-center py-12">
+                                <i class="fas fa-users text-gray-300 text-6xl mb-4"></i>
+                                <p class="text-gray-500 text-lg">لا يوجد مالكين مسجلين</p>
+                                <p class="text-gray-400 text-sm mt-2">إضغط على "إضافة مالك" لبدء التسجيل</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
 
-        transactionsContainer.innerHTML = this.transactions.map(transaction => `
-            <div class="border-b border-gray-200 last:border-b-0">
-                <div class="p-4 hover:bg-gray-50 transition-colors">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-2 space-x-reverse mb-1">
+                ownersContainer.innerHTML = this.owners.map(owner => {
+                    // Calculate owner statistics
+                    const ownerTransactions = this.transactions.filter(t => t.owner === owner.name);
+                    const totalPaid = ownerTransactions
+                        .filter(t => t.type === 'income')
+                        .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+                    
+                    const monthlySubscription = owner.subscription || 100;
+                    const currentMonth = new Date().getMonth() + 1;
+                    const currentYear = new Date().getFullYear();
+                    
+                    // Simple calculation for unpaid months (this can be enhanced)
+                    const unpaidMonths = Math.max(0, Math.floor((monthlySubscription * 6 - totalPaid) / monthlySubscription));
+                    
+                    const totalDue = unpaidMonths * monthlySubscription;
+                    const isLate = unpaidMonths > 0;
+
+                    return `
+                        <tr>
+                            <td class="font-semibold">${owner.name || 'غير معروف'}</td>
+                            <td>${owner.apartmentNumber || 'N/A'}</td>
+                            <td>${owner.phone || 'N/A'}</td>
+                            <td>${monthlySubscription} د.أ</td>
+                            <td>${totalDue} د.أ</td>
+                            <td>${totalPaid} د.أ</td>
+                            <td>${unpaidMonths}</td>
+                            <td>
+                                <span class="${isLate ? 'status-late' : 'status-paid'}">
+                                    ${isLate ? 'متأخر' : 'مستحق'}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="flex flex-wrap gap-1">
+                                    <button onclick="appManager.showOwnerDetails('${owner.id}')" class="action-btn bg-blue-100 text-blue-700 hover:bg-blue-200">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="appManager.editOwner('${owner.id}')" class="action-btn bg-green-100 text-green-700 hover:bg-green-200">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="appManager.showOwnerTransactions('${owner.name}')" class="action-btn bg-purple-100 text-purple-700 hover:bg-purple-200">
+                                        <i class="fas fa-receipt"></i>
+                                    </button>
+                                    <button onclick="appManager.deleteOwner('${owner.id}')" class="action-btn bg-red-100 text-red-700 hover:bg-red-200">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            updateTransactionsUI() {
+                if (this.filteredTransactions.length === 0) {
+                    transactionsContainer.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center py-12">
+                                <i class="fas fa-receipt text-gray-300 text-6xl mb-4"></i>
+                                <p class="text-gray-500 text-lg">لا توجد معاملات مسجلة</p>
+                                <p class="text-gray-400 text-sm mt-2">إضغط على "إضافة دفعة" لتسجيل أول معاملة</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                transactionsContainer.innerHTML = this.filteredTransactions.map(transaction => {
+                    const transactionDate = new Date(transaction.date);
+                    const formattedDate = transactionDate.toLocaleDateString('ar-EG');
+                    
+                    return `
+                        <tr>
+                            <td>${formattedDate}</td>
+                            <td>
                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                     transaction.type === 'income' 
                                         ? 'bg-green-100 text-green-800' 
@@ -1513,27 +1825,144 @@ class AppManager {
                                     } mr-1"></i>
                                     ${transaction.type === 'income' ? 'واردات' : 'مصروفات'}
                                 </span>
-                                <span class="text-xs text-gray-500">
-                                    ${new Date(transaction.date).toLocaleDateString('ar-EG')}
-                                </span>
-                            </div>
-                            <h3 class="font-medium text-gray-800">${transaction.description || 'لا يوجد وصف'}</h3>
-                            <p class="text-sm text-gray-600">${transaction.owner || 'عام'}</p>
-                            ${transaction.notes ? `<p class="text-sm text-gray-500 mt-1">${transaction.notes}</p>` : ''}
-                        </div>
-                        <div class="text-left ml-4">
-                            <p class="text-lg font-semibold ${
+                            </td>
+                            <td>${transaction.owner || 'عام'}</td>
+                            <td>${transaction.description || 'لا يوجد وصف'}</td>
+                            <td class="font-semibold ${
                                 transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                             }">
                                 ${transaction.type === 'income' ? '+' : '-'}${parseFloat(transaction.amount || 0).toFixed(2)} د.أ
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-}
+                            </td>
+                            <td>${transaction.category || 'غير مصنف'}</td>
+                            <td>
+                                ${transaction.notes ? 
+                                    `<button onclick="appManager.showTransactionNotes('${transaction.id}')" class="action-btn bg-gray-100 text-gray-700 hover:bg-gray-200">
+                                        <i class="fas fa-sticky-note"></i>
+                                    </button>` 
+                                    : 'لا يوجد'
+                                }
+                            </td>
+                            <td>
+                                <div class="flex flex-wrap gap-1">
+                                    <button onclick="appManager.showTransactionDetails('${transaction.id}')" class="action-btn bg-blue-100 text-blue-700 hover:bg-blue-200">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="appManager.editTransaction('${transaction.id}')" class="action-btn bg-green-100 text-green-700 hover:bg-green-200">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="appManager.printReceipt('${transaction.id}')" class="action-btn bg-yellow-100 text-yellow-700 hover:bg-yellow-200">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                    <button onclick="appManager.shareReceipt('${transaction.id}')" class="action-btn bg-green-100 text-green-700 hover:bg-green-200">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </button>
+                                    <button onclick="appManager.deleteTransaction('${transaction.id}')" class="action-btn bg-red-100 text-red-700 hover:bg-red-200">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Action methods for transactions
+            showTransactionDetails(transactionId) {
+                const transaction = this.transactions.find(t => t.id === transactionId);
+                if (transaction) {
+                    alert(`تفاصيل المعاملة:\n\nالوصف: ${transaction.description}\nالمبلغ: ${transaction.amount} د.أ\nالنوع: ${transaction.type === 'income' ? 'واردات' : 'مصروفات'}\nالمالك: ${transaction.owner || 'عام'}\nالتاريخ: ${new Date(transaction.date).toLocaleDateString('ar-EG')}`);
+                }
+            }
+
+            editTransaction(transactionId) {
+                const transaction = this.transactions.find(t => t.id === transactionId);
+                if (transaction) {
+                    // Here you would open a modal to edit the transaction
+                    alert(`تعديل المعاملة: ${transaction.description}`);
+                    // Implement edit functionality
+                }
+            }
+
+            printReceipt(transactionId) {
+                const transaction = this.transactions.find(t => t.id === transactionId);
+                if (transaction) {
+                    // Implement print receipt functionality
+                    alert(`طباعة إيصال للمعاملة: ${transaction.description}`);
+                }
+            }
+
+            shareReceipt(transactionId) {
+                const transaction = this.transactions.find(t => t.id === transactionId);
+                if (transaction) {
+                    // Implement WhatsApp sharing functionality
+                    const message = `إيصال دفعة: ${transaction.description}\nالمبلغ: ${transaction.amount} د.أ\nالتاريخ: ${new Date(transaction.date).toLocaleDateString('ar-EG')}`;
+                    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+                    window.open(whatsappUrl, '_blank');
+                }
+            }
+
+            showTransactionNotes(transactionId) {
+                const transaction = this.transactions.find(t => t.id === transactionId);
+                if (transaction && transaction.notes) {
+                    alert(`ملاحظات المعاملة:\n\n${transaction.notes}`);
+                }
+            }
+
+            async deleteTransaction(transactionId) {
+                if (confirm('هل أنت متأكد من حذف هذه المعاملة؟')) {
+                    try {
+                        await this.dataManager.deleteTransaction(transactionId);
+                        console.log('Transaction deleted successfully');
+                    } catch (error) {
+                        console.error('Error deleting transaction:', error);
+                        alert('حدث خطأ أثناء حذف المعاملة');
+                    }
+                }
+            }
+
+            // Action methods for owners
+            showOwnerDetails(ownerId) {
+                const owner = this.owners.find(o => o.id === ownerId);
+                if (owner) {
+                    alert(`تفاصيل المالك:\n\nالاسم: ${owner.name}\nرقم الشقة: ${owner.apartmentNumber}\nالهاتف: ${owner.phone || 'N/A'}\nالاشتراك الشهري: ${owner.subscription || 100} د.أ`);
+                }
+            }
+
+            editOwner(ownerId) {
+                const owner = this.owners.find(o => o.id === ownerId);
+                if (owner) {
+                    // Here you would open a modal to edit the owner
+                    alert(`تعديل بيانات المالك: ${owner.name}`);
+                    // Implement edit functionality
+                }
+            }
+
+            showOwnerTransactions(ownerName) {
+                // Filter transactions by owner and show them
+                const ownerTransactions = this.transactions.filter(t => t.owner === ownerName);
+                if (ownerTransactions.length > 0) {
+                    const transactionsList = ownerTransactions.map(t => 
+                        `${new Date(t.date).toLocaleDateString('ar-EG')} - ${t.description} - ${t.amount} د.أ`
+                    ).join('\n');
+                    alert(`معاملات ${ownerName}:\n\n${transactionsList}`);
+                } else {
+                    alert(`لا توجد معاملات مسجلة لـ ${ownerName}`);
+                }
+            }
+
+            async deleteOwner(ownerId) {
+                if (confirm('هل أنت متأكد من حذف هذا المالك؟ سيتم حذف جميع معاملاته المرتبطة به.')) {
+                    try {
+                        await this.dataManager.deleteOwner(ownerId);
+                        console.log('Owner deleted successfully');
+                    } catch (error) {
+                        console.error('Error deleting owner:', error);
+                        alert('حدث خطأ أثناء حذف المالك');
+                    }
+                }
+            }
+        }
+
         // Initialize Managers
         const authManager = new FirebaseAuthManager();
         const dataManager = new FirebaseDataManager(authManager);
@@ -1829,6 +2258,11 @@ class AppManager {
                 return;
             }
             
+            if (!formData.get('owner')) {
+                alert('يرجى اختيار مالك الشقة');
+                return;
+            }
+            
             try {
                 const transaction = {
                     type: formData.get('type'),
@@ -1836,6 +2270,7 @@ class AppManager {
                     description: formData.get('description'),
                     owner: formData.get('owner'),
                     date: formData.get('date') || new Date().toISOString().split('T')[0],
+                    category: formData.get('category'),
                     notes: formData.get('notes'),
                     buildingId: appManager.currentBuildingId
                 };
